@@ -1,0 +1,138 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { VideoCard, type VideoCardData } from "@/components/site/VideoCard";
+import { BlogCard, type BlogCardData } from "@/components/site/BlogCard";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Sparkles } from "lucide-react";
+
+interface Category { id: string; name: string; slug: string }
+
+export default function Home() {
+  const [trending, setTrending] = useState<VideoCardData[]>([]);
+  const [featured, setFeatured] = useState<VideoCardData[]>([]);
+  const [blogs, setBlogs] = useState<BlogCardData[]>([]);
+  const [cats, setCats] = useState<Category[]>([]);
+
+  useEffect(() => {
+    document.title = "Hertech — AI & Tech Content for Women";
+    (async () => {
+      const [{ data: t }, { data: f }, { data: b }, { data: c }] = await Promise.all([
+        supabase.from("videos").select("id,title,description,youtube_url,thumbnail,category:categories(name,slug)").eq("trending", true).order("created_at", { ascending: false }).limit(8),
+        supabase.from("videos").select("id,title,description,youtube_url,thumbnail,category:categories(name,slug)").eq("featured", true).order("created_at", { ascending: false }).limit(6),
+        supabase.from("blogs").select("id,slug,title,content,cover_image,tags,created_at,category:categories(name,slug)").order("created_at", { ascending: false }).limit(3),
+        supabase.from("categories").select("id,name,slug").order("name"),
+      ]);
+      setTrending((t as any) || []);
+      setFeatured((f as any) || []);
+      setBlogs((b as any) || []);
+      setCats((c as any) || []);
+    })();
+  }, []);
+
+  return (
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-border" style={{ background: "var(--gradient-hero)" }}>
+        <div className="container-page py-20 md:py-28 text-primary-foreground">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/20 border border-accent/40 text-sm mb-6">
+              <Sparkles className="h-3.5 w-3.5" /> AI & Tech, for women
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+              Learn AI. Build the future. <span className="text-accent">On your terms.</span>
+            </h1>
+            <p className="mt-6 text-lg text-primary-foreground/80 max-w-2xl">
+              Short, sharp videos and editorial blogs on artificial intelligence, tools, and tech careers — built for women shaping the future.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/videos"><Button size="lg" className="rounded-none bg-accent hover:bg-accent/90">Watch videos <ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
+              <Link to="/blogs"><Button size="lg" variant="outline" className="rounded-none border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">Read blogs</Button></Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trending */}
+      {trending.length > 0 && (
+        <section className="py-14">
+          <div className="container-page">
+            <SectionHeader title="Trending now" link="/videos" />
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 snap-x">
+              {trending.map((v) => (
+                <div key={v.id} className="min-w-[280px] sm:min-w-[320px] snap-start">
+                  <VideoCard v={v} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Categories */}
+      <section className="py-14 bg-surface border-y border-border">
+        <div className="container-page">
+          <SectionHeader title="Browse by category" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {cats.map((c) => (
+              <Link key={c.id} to={`/category/${c.slug}`} className="bg-card border border-border p-5 card-hover">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">Topic</div>
+                <div className="mt-1 font-semibold">{c.name}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured videos */}
+      {featured.length > 0 && (
+        <section className="py-14">
+          <div className="container-page">
+            <SectionHeader title="Featured videos" link="/videos" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {featured.map((v) => <VideoCard key={v.id} v={v} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Blogs */}
+      {blogs.length > 0 && (
+        <section className="py-14 bg-surface border-t border-border">
+          <div className="container-page">
+            <SectionHeader title="From the blog" link="/blogs" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {blogs.map((b) => <BlogCard key={b.id} b={b} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CTA */}
+      <section className="py-20">
+        <div className="container-page">
+          <div className="bg-primary text-primary-foreground p-10 md:p-14 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold">Ready to dive deeper?</h2>
+            <p className="mt-3 text-primary-foreground/80 max-w-xl mx-auto">Explore our full library of AI & tech content and start building today.</p>
+            <Link to="/videos" className="inline-block mt-6">
+              <Button size="lg" className="rounded-none bg-accent hover:bg-accent/90">Explore the library</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function SectionHeader({ title, link }: { title: string; link?: string }) {
+  return (
+    <div className="flex items-end justify-between mb-6">
+      <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h2>
+      {link && (
+        <Link to={link} className="text-sm font-medium text-accent hover:underline inline-flex items-center gap-1">
+          View all <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
+    </div>
+  );
+}
