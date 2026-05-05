@@ -83,12 +83,11 @@ export default function AdminBlogs() {
               </Field>
               <Field label="Tags (comma separated)"><input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className={inp} /></Field>
               <Field label="Content">
-                <ReactQuill
-                  theme="snow"
+                <RichTextEditor
                   value={editing.content}
-                  onChange={(val) => setEditing({ ...editing, content: val })}
-                  modules={quillModules}
+                  onChange={(val: string) => setEditing({ ...editing, content: val })}
                 />
+
               </Field>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editing.featured} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })} /> Featured</label>
             </div>
