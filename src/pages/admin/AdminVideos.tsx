@@ -76,7 +76,15 @@ export default function AdminVideos() {
             <div className="p-5 space-y-3">
               <Field label="Title"><input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className={inp} /></Field>
               <Field label="YouTube URL"><input value={editing.youtube_url} onChange={(e) => setEditing({ ...editing, youtube_url: e.target.value })} className={inp} placeholder="https://youtube.com/watch?v=..." /></Field>
-              <Field label="Custom thumbnail (optional)"><input value={editing.thumbnail || ""} onChange={(e) => setEditing({ ...editing, thumbnail: e.target.value })} className={inp} /></Field>
+              {editing.youtube_url && getYouTubeThumb(editing.youtube_url) && (
+                <Field label="Thumbnail (auto from YouTube)">
+                  <img
+                    src={getYouTubeThumb(editing.youtube_url)}
+                    alt="thumbnail preview"
+                    className="w-full max-w-sm aspect-video object-cover bg-secondary border border-border"
+                  />
+                </Field>
+              )}
               <Field label="Description"><textarea rows={4} value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className={inp + " h-auto py-2"} /></Field>
               <Field label="Tags (comma separated)"><input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className={inp} placeholder="ai, beginners, prompting" /></Field>
               <Field label="Category">

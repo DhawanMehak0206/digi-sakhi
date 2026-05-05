@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import RichTextEditor from "@/components/site/RichTextEditor";
+import ImageUpload from "@/components/site/ImageUpload";
 import {
   blogs as blogsData, categories, addBlog, updateBlog, deleteBlog, type Blog,
 } from "@/lib/mockData";
