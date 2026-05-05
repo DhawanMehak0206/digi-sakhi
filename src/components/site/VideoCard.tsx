@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { getYouTubeThumb } from "@/lib/content";
-import { Play } from "lucide-react";
+import { PlayCircle } from "lucide-react";
+import { getCategoryById } from "@/lib/mockData";
 
 export interface VideoCardData {
   id: string;
@@ -8,10 +9,12 @@ export interface VideoCardData {
   description?: string | null;
   youtube_url: string;
   thumbnail?: string | null;
-  category?: { name: string; slug: string } | null;
+  category_id?: string | null;
+  tags?: string[];
 }
 
 export function VideoCard({ v }: { v: VideoCardData }) {
+  const category = getCategoryById(v.category_id);
   return (
     <Link to={`/videos/${v.id}`} className="group block bg-card border border-border card-hover">
       <div className="relative aspect-video overflow-hidden bg-secondary">
@@ -21,14 +24,12 @@ export function VideoCard({ v }: { v: VideoCardData }) {
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity h-12 w-12 bg-accent text-accent-foreground flex items-center justify-center">
-            <Play className="h-5 w-5 fill-current" />
-          </div>
+        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/30 transition-colors flex items-center justify-center">
+          <PlayCircle className="h-14 w-14 text-white opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
         </div>
-        {v.category && (
+        {category && (
           <span className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-xs font-medium px-2 py-1">
-            {v.category.name}
+            {category.name}
           </span>
         )}
       </div>
@@ -38,6 +39,15 @@ export function VideoCard({ v }: { v: VideoCardData }) {
         </h3>
         {v.description && (
           <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{v.description}</p>
+        )}
+        {v.tags && v.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1">
+            {v.tags.slice(0, 3).map((t) => (
+              <span key={t} className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-accent-soft text-accent">
+                #{t}
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </Link>

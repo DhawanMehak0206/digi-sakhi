@@ -1,31 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { VideoCard, type VideoCardData } from "@/components/site/VideoCard";
-import { BlogCard, type BlogCardData } from "@/components/site/BlogCard";
+import { VideoCard } from "@/components/site/VideoCard";
+import { BlogCard } from "@/components/site/BlogCard";
+import { categories, videos, blogs } from "@/lib/mockData";
 
 export default function CategoryPage() {
   const { name } = useParams();
-  const [cat, setCat] = useState<any>(null);
-  const [videos, setVideos] = useState<VideoCardData[]>([]);
-  const [blogs, setBlogs] = useState<BlogCardData[]>([]);
+  const cat = useMemo(() => categories.find((c) => c.slug === name), [name]);
+  const cVideos = useMemo(() => cat ? videos.filter((v) => v.category_id === cat.id) : [], [cat]);
+  const cBlogs = useMemo(() => cat ? blogs.filter((b) => b.category_id === cat.id) : [], [cat]);
 
   useEffect(() => {
-    if (!name) return;
-    (async () => {
-      const { data: c } = await supabase.from("categories").select("*").eq("slug", name).maybeSingle();
-      setCat(c);
-      if (!c) return;
-      document.title = `${c.name} — Hertech`;
-      const [{ data: v }, { data: b }] = await Promise.all([
-        supabase.from("videos").select("id,title,description,youtube_url,thumbnail,category:categories(name,slug)").eq("category_id", c.id).order("created_at", { ascending: false }),
-        supabase.from("blogs").select("id,slug,title,content,cover_image,tags,created_at,category:categories(name,slug)").eq("category_id", c.id).order("created_at", { ascending: false }),
-      ]);
-      setVideos((v as any) || []); setBlogs((b as any) || []);
-    })();
-  }, [name]);
+    if (cat) document.title = `${cat.name} — Hertech`;
+  }, [cat]);
 
-  if (!cat) return <div className="container-page py-20 text-center text-muted-foreground">Loading…</div>;
+  if (!cat) return <div className="container-page py-20 text-center text-muted-foreground">Category not found.</div>;
 
   return (
     <div className="container-page py-10">
@@ -36,22 +25,22 @@ export default function CategoryPage() {
 
       <section className="mb-12">
         <h2 className="text-xl font-bold mb-5">Videos</h2>
-        {videos.length === 0 ? (
+        {cVideos.length === 0 ? (
           <p className="text-muted-foreground text-sm">No videos in this category yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {videos.map((v) => <VideoCard key={v.id} v={v} />)}
+            {cVideos.map((v) => <VideoCard key={v.id} v={v} />)}
           </div>
         )}
       </section>
 
       <section>
         <h2 className="text-xl font-bold mb-5">Blogs</h2>
-        {blogs.length === 0 ? (
+        {cBlogs.length === 0 ? (
           <p className="text-muted-foreground text-sm">No blogs in this category yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {blogs.map((b) => <BlogCard key={b.id} b={b} />)}
+            {cBlogs.map((b) => <BlogCard key={b.id} b={b} />)}
           </div>
         )}
       </section>

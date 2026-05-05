@@ -2,6 +2,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Search, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -23,10 +25,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur">
       <div className="container-page flex h-16 items-center gap-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center bg-primary text-primary-foreground font-bold">H</div>
-          <span className="text-lg font-bold tracking-tight">Hertech</span>
-        </Link>
+        <Link to="/"><Logo /></Link>
 
         <nav className="hidden md:flex items-center gap-1 ml-6">
           {nav.map((n) => (
@@ -55,13 +54,19 @@ export default function Header() {
           />
         </form>
 
-        <Link to="/admin" className="hidden md:block">
-          <Button variant="outline" size="sm" className="rounded-none">Admin</Button>
-        </Link>
+        <div className="hidden md:flex items-center gap-2">
+          <ThemeToggle />
+          <Link to="/admin">
+            <Button variant="outline" size="sm" className="rounded-none">Admin</Button>
+          </Link>
+        </div>
 
-        <button className="md:hidden ml-auto p-2" onClick={() => setOpen(!open)} aria-label="menu">
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="md:hidden ml-auto flex items-center gap-2">
+          <ThemeToggle />
+          <button className="p-2" onClick={() => setOpen(!open)} aria-label="menu">
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (

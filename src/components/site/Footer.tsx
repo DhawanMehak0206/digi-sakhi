@@ -1,14 +1,12 @@
 import { Link } from "react-router-dom";
+import Logo from "./Logo";
 
 export default function Footer() {
   return (
     <footer className="border-t border-border bg-surface mt-20">
       <div className="container-page py-12 grid gap-8 md:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex h-8 w-8 items-center justify-center bg-primary text-primary-foreground font-bold">H</div>
-            <span className="text-lg font-bold">Hertech</span>
-          </div>
+          <div className="mb-3"><Logo /></div>
           <p className="text-sm text-muted-foreground">AI & technology content built for women, by women.</p>
         </div>
         <div>

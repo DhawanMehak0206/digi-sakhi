@@ -1,32 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { VideoCard, type VideoCardData } from "@/components/site/VideoCard";
-import { BlogCard, type BlogCardData } from "@/components/site/BlogCard";
+import { VideoCard } from "@/components/site/VideoCard";
+import { BlogCard } from "@/components/site/BlogCard";
 import { Search } from "lucide-react";
+import { videos, blogs } from "@/lib/mockData";
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
-  const [videos, setVideos] = useState<VideoCardData[]>([]);
-  const [blogs, setBlogs] = useState<BlogCardData[]>([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => { document.title = "Search — Hertech"; }, []);
 
-  useEffect(() => {
-    const term = params.get("q")?.trim();
-    if (!term) { setVideos([]); setBlogs([]); return; }
-    setLoading(true);
-    (async () => {
-      const [{ data: v }, { data: b }] = await Promise.all([
-        supabase.from("videos").select("id,title,description,youtube_url,thumbnail,category:categories(name,slug)").or(`title.ilike.%${term}%,description.ilike.%${term}%`),
-        supabase.from("blogs").select("id,slug,title,content,cover_image,tags,created_at,category:categories(name,slug)").or(`title.ilike.%${term}%,content.ilike.%${term}%`),
-      ]);
-      setVideos((v as any) || []); setBlogs((b as any) || []);
-      setLoading(false);
-    })();
-  }, [params]);
+  const term = (params.get("q") || "").trim().toLowerCase();
+  const vResults = useMemo(() => !term ? [] : videos.filter((v) =>
+    v.title.toLowerCase().includes(term) ||
+    (v.description || "").toLowerCase().includes(term) ||
+    (v.tags || []).some((t) => t.toLowerCase().includes(term))
+  ), [term]);
+  const bResults = useMemo(() => !term ? [] : blogs.filter((b) =>
+    b.title.toLowerCase().includes(term) ||
+    b.content.toLowerCase().includes(term) ||
+    (b.tags || []).some((t) => t.toLowerCase().includes(term))
+  ), [term]);
 
   const submit = (e: React.FormEvent) => { e.preventDefault(); setParams({ q }); };
 
@@ -38,20 +33,18 @@ export default function SearchPage() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search videos and blogs..." className="w-full h-12 pl-10 pr-4 bg-card border border-border rounded-none focus:outline-none focus:border-accent" autoFocus />
       </form>
 
-      {loading && <p className="text-muted-foreground">Searching…</p>}
-
-      {!loading && params.get("q") && (
+      {term && (
         <>
           <section className="mb-12">
-            <h2 className="text-xl font-bold mb-5">Videos ({videos.length})</h2>
-            {videos.length === 0 ? <p className="text-sm text-muted-foreground">No videos found.</p> : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">{videos.map((v) => <VideoCard key={v.id} v={v} />)}</div>
+            <h2 className="text-xl font-bold mb-5">Videos ({vResults.length})</h2>
+            {vResults.length === 0 ? <p className="text-sm text-muted-foreground">No videos found.</p> : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">{vResults.map((v) => <VideoCard key={v.id} v={v} />)}</div>
             )}
           </section>
           <section>
-            <h2 className="text-xl font-bold mb-5">Blogs ({blogs.length})</h2>
-            {blogs.length === 0 ? <p className="text-sm text-muted-foreground">No blogs found.</p> : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">{blogs.map((b) => <BlogCard key={b.id} b={b} />)}</div>
+            <h2 className="text-xl font-bold mb-5">Blogs ({bResults.length})</h2>
+            {bResults.length === 0 ? <p className="text-sm text-muted-foreground">No blogs found.</p> : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">{bResults.map((b) => <BlogCard key={b.id} b={b} />)}</div>
             )}
           </section>
         </>
