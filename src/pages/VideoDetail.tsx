@@ -1,34 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { getYouTubeId } from "@/lib/content";
-import { VideoCard, type VideoCardData } from "@/components/site/VideoCard";
+import { VideoCard } from "@/components/site/VideoCard";
+import { videos, getCategoryById } from "@/lib/mockData";
 
 export default function VideoDetail() {
   const { id } = useParams();
-  const [video, setVideo] = useState<any>(null);
-  const [related, setRelated] = useState<VideoCardData[]>([]);
-  const [notFound, setNotFound] = useState(false);
+  const video = useMemo(() => videos.find((v) => v.id === id), [id]);
+  const category = getCategoryById(video?.category_id);
+  const related = useMemo(
+    () => video ? videos.filter((v) => v.id !== video.id && v.category_id === video.category_id).slice(0, 3) : [],
+    [video]
+  );
 
   useEffect(() => {
-    if (!id) return;
-    (async () => {
-      const { data } = await supabase.from("videos").select("*, category:categories(name,slug)").eq("id", id).maybeSingle();
-      if (!data) { setNotFound(true); return; }
-      setVideo(data);
-      document.title = `${data.title} — Hertech`;
-      const { data: rel } = await supabase
-        .from("videos")
-        .select("id,title,description,youtube_url,thumbnail,category:categories(name,slug)")
-        .neq("id", id)
-        .eq("category_id", data.category_id || "")
-        .limit(3);
-      setRelated((rel as any) || []);
-    })();
-  }, [id]);
+    if (video) document.title = `${video.title} — Hertech`;
+  }, [video]);
 
-  if (notFound) return <div className="container-page py-20 text-center">Video not found. <Link to="/videos" className="text-accent">Back to videos</Link></div>;
-  if (!video) return <div className="container-page py-20 text-center text-muted-foreground">Loading…</div>;
+  if (!video) return <div className="container-page py-20 text-center">Video not found. <Link to="/videos" className="text-accent">Back to videos</Link></div>;
 
   const ytId = getYouTubeId(video.youtube_url);
 
@@ -43,11 +32,18 @@ export default function VideoDetail() {
               <div className="flex items-center justify-center h-full text-primary-foreground text-sm">Invalid video URL</div>
             )}
           </div>
-          {video.category && (
-            <Link to={`/category/${video.category.slug}`} className="text-xs uppercase tracking-wider text-accent font-medium">{video.category.name}</Link>
+          {category && (
+            <Link to={`/category/${category.slug}`} className="text-xs uppercase tracking-wider text-accent font-medium">{category.name}</Link>
           )}
           <h1 className="mt-2 text-2xl md:text-3xl font-bold">{video.title}</h1>
           {video.description && <p className="mt-4 text-muted-foreground whitespace-pre-line">{video.description}</p>}
+          {video.tags && video.tags.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-border flex flex-wrap gap-2">
+              {video.tags.map((t) => (
+                <span key={t} className="text-xs px-2 py-1 bg-secondary text-secondary-foreground">#{t}</span>
+              ))}
+            </div>
+          )}
         </article>
 
         <aside>
