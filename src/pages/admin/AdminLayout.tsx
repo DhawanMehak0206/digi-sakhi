@@ -1,20 +1,19 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, Video, FileText, Tag, ArrowLeft } from "lucide-react";
+import { adminAuth, useAdminAuth } from "@/hooks/useAdminAuth";
+import ConfirmDialog from "@/components/site/ConfirmDialog";
+import ThemeToggle from "@/components/site/ThemeToggle";
+import Logo from "@/components/site/Logo";
 
 export default function AdminLayout() {
-  const { session, isAdmin, loading } = useAuth();
+  const authed = useAdminAuth();
   const navigate = useNavigate();
+  const [confirmOut, setConfirmOut] = useState(false);
 
-  useEffect(() => {
-    if (!loading && (!session || !isAdmin)) navigate("/admin/auth", { replace: true });
-  }, [session, isAdmin, loading, navigate]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (!session || !isAdmin) return null;
+  useEffect(() => { if (!authed) navigate("/admin/auth", { replace: true }); }, [authed, navigate]);
+  if (!authed) return null;
 
   const items = [
     { to: "/admin", label: "Videos", icon: Video, end: true },
@@ -24,14 +23,11 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <aside className="md:w-60 md:min-h-screen border-b md:border-b-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-        <div className="p-5 border-b border-sidebar-border">
-          <Link to="/" className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-primary">
-            <div className="flex h-8 w-8 items-center justify-center bg-sidebar-primary text-sidebar-primary-foreground font-bold">H</div>
-            <span className="font-bold">Hertech Admin</span>
-          </Link>
+      <aside className="md:w-60 md:min-h-screen md:flex md:flex-col border-b md:border-b-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+        <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
+          <Link to="/" className="text-sidebar-foreground hover:text-sidebar-primary"><Logo /></Link>
         </div>
-        <nav className="p-3 flex md:flex-col gap-1 overflow-x-auto">
+        <nav className="p-3 flex md:flex-col gap-1 overflow-x-auto md:flex-1">
           {items.map((it) => (
             <NavLink key={it.to} to={it.to} end={it.end} className={({ isActive }) =>
               `flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap ${isActive ? "bg-sidebar-accent text-sidebar-primary" : "hover:bg-sidebar-accent/50"}`}>
@@ -39,11 +35,20 @@ export default function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 mt-auto md:absolute md:bottom-0 md:w-60 border-t border-sidebar-border space-y-2">
+        <div className="p-3 border-t border-sidebar-border space-y-2">
+          <div className="flex items-center justify-between px-1 py-1">
+            <span className="text-xs text-sidebar-foreground/70">Theme</span>
+            <ThemeToggle />
+          </div>
           <Link to="/" className="flex items-center gap-2 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground px-3 py-2">
             <ArrowLeft className="h-3 w-3" /> Back to site
           </Link>
-          <Button variant="outline" size="sm" className="w-full rounded-none bg-transparent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => supabase.auth.signOut()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full rounded-none bg-transparent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={() => setConfirmOut(true)}
+          >
             <LogOut className="h-3 w-3 mr-2" /> Sign out
           </Button>
         </div>
@@ -53,6 +58,16 @@ export default function AdminLayout() {
           <Outlet />
         </div>
       </main>
+
+      <ConfirmDialog
+        open={confirmOut}
+        onOpenChange={setConfirmOut}
+        title="Sign out?"
+        description="You'll need to sign in again to manage content."
+        confirmLabel="Sign out"
+        destructive
+        onConfirm={() => adminAuth.logout()}
+      />
     </div>
   );
 }

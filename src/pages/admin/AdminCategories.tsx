@@ -1,35 +1,22 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
-import { slugify } from "@/lib/content";
-
-interface Cat { id: string; name: string; slug: string }
+import { categories, addCategory, deleteCategory } from "@/lib/mockData";
+import ConfirmDialog from "@/components/site/ConfirmDialog";
 
 export default function AdminCategories() {
-  const [cats, setCats] = useState<Cat[]>([]);
+  const [, force] = useState(0);
+  const refresh = () => force((n) => n + 1);
   const [name, setName] = useState("");
+  const [delId, setDelId] = useState<string | null>(null);
 
-  const load = async () => {
-    const { data } = await supabase.from("categories").select("*").order("name");
-    setCats((data as any) || []);
-  };
-  useEffect(() => { load(); }, []);
-
-  const add = async (e: React.FormEvent) => {
+  const add = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    const { error } = await supabase.from("categories").insert({ name: name.trim(), slug: slugify(name) });
-    if (error) return toast.error(error.message);
-    setName(""); load();
-  };
-
-  const remove = async (id: string) => {
-    if (!confirm("Delete category? Content in it will be uncategorized.")) return;
-    const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    load();
+    addCategory(name.trim());
+    setName(""); refresh();
+    toast.success("Category added");
   };
 
   return (
@@ -40,16 +27,26 @@ export default function AdminCategories() {
         <Button type="submit" className="rounded-none bg-accent hover:bg-accent/90"><Plus className="h-4 w-4 mr-1" /> Add</Button>
       </form>
       <div className="grid gap-2 max-w-md">
-        {cats.map((c) => (
+        {categories.map((c) => (
           <div key={c.id} className="flex items-center justify-between bg-card border border-border px-4 py-3">
             <div>
               <div className="font-medium">{c.name}</div>
               <div className="text-xs text-muted-foreground">/{c.slug}</div>
             </div>
-            <Button size="sm" variant="outline" className="rounded-none text-destructive" onClick={() => remove(c.id)}><Trash2 className="h-3 w-3" /></Button>
+            <Button size="sm" variant="outline" className="rounded-none text-destructive" onClick={() => setDelId(c.id)}><Trash2 className="h-3 w-3" /></Button>
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={!!delId}
+        onOpenChange={(o) => !o && setDelId(null)}
+        title="Delete this category?"
+        description="Content in this category will be uncategorized."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => { if (delId) { deleteCategory(delId); refresh(); toast.success("Deleted"); } }}
+      />
     </div>
   );
 }
