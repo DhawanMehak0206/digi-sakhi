@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import RichTextEditor from "@/components/site/RichTextEditor";
+import ImageUpload from "@/components/site/ImageUpload";
 import {
   blogs as blogsData, categories, addBlog, updateBlog, deleteBlog, type Blog,
 } from "@/lib/mockData";
@@ -74,7 +75,12 @@ export default function AdminBlogs() {
             <div className="p-5 space-y-4">
               <Field label="Title"><input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className={inp} /></Field>
               <Field label="Slug (optional)"><input value={editing.slug || ""} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} className={inp} placeholder="auto from title" /></Field>
-              <Field label="Cover image URL"><input value={editing.cover_image || ""} onChange={(e) => setEditing({ ...editing, cover_image: e.target.value })} className={inp} /></Field>
+              <Field label="Cover image">
+                <ImageUpload
+                  value={editing.cover_image}
+                  onChange={(v) => setEditing({ ...editing, cover_image: v })}
+                />
+              </Field>
               <Field label="Category">
                 <select value={editing.category_id || ""} onChange={(e) => setEditing({ ...editing, category_id: e.target.value || null })} className={inp}>
                   <option value="">— None —</option>
