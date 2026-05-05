@@ -2,22 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
-import ReactQuill from "react-quill";
+import RichTextEditor from "@/components/site/RichTextEditor";
 import {
   blogs as blogsData, categories, addBlog, updateBlog, deleteBlog, type Blog,
 } from "@/lib/mockData";
 import ConfirmDialog from "@/components/site/ConfirmDialog";
-
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
-    [{ align: [] }],
-    ["clean"],
-  ],
-};
 
 const empty = {
   title: "", slug: "", content: "", cover_image: "",
@@ -94,12 +83,11 @@ export default function AdminBlogs() {
               </Field>
               <Field label="Tags (comma separated)"><input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className={inp} /></Field>
               <Field label="Content">
-                <ReactQuill
-                  theme="snow"
+                <RichTextEditor
                   value={editing.content}
-                  onChange={(val) => setEditing({ ...editing, content: val })}
-                  modules={quillModules}
+                  onChange={(val: string) => setEditing({ ...editing, content: val })}
                 />
+
               </Field>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editing.featured} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })} /> Featured</label>
             </div>
