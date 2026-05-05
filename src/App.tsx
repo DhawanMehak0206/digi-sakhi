@@ -3,8 +3,21 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import SiteLayout from "@/components/site/SiteLayout";
+import Home from "./pages/Home";
+import Videos from "./pages/Videos";
+import VideoDetail from "./pages/VideoDetail";
+import Blogs from "./pages/Blogs";
+import BlogDetail from "./pages/BlogDetail";
+import CategoryPage from "./pages/CategoryPage";
+import SearchPage from "./pages/SearchPage";
+import Contact from "./pages/Contact";
+import AdminAuth from "./pages/admin/AdminAuth";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminVideos from "./pages/admin/AdminVideos";
+import AdminBlogs from "./pages/admin/AdminBlogs";
+import AdminCategories from "./pages/admin/AdminCategories";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +28,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route element={<SiteLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/videos" element={<Videos />} />
+            <Route path="/videos/:id" element={<VideoDetail />} />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blogs/:slug" element={<BlogDetail />} />
+            <Route path="/category/:name" element={<CategoryPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/contact" element={<Contact />} />
+          </Route>
+          <Route path="/admin/auth" element={<AdminAuth />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminVideos />} />
+            <Route path="blogs" element={<AdminBlogs />} />
+            <Route path="categories" element={<AdminCategories />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
