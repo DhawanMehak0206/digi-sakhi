@@ -18,6 +18,7 @@ interface Props {
 
 export default function RichTextEditor({ value, onChange, placeholder }: Props) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-accent underline" } }),
