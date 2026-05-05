@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { getCategoryById } from "@/lib/mockData";
 
 export interface BlogCardData {
   id: string;
@@ -7,7 +8,7 @@ export interface BlogCardData {
   content: string;
   cover_image?: string | null;
   tags?: string[] | null;
-  category?: { name: string; slug: string } | null;
+  category_id?: string | null;
   created_at: string;
 }
 
@@ -17,6 +18,7 @@ function excerpt(s: string, n = 140) {
 }
 
 export function BlogCard({ b }: { b: BlogCardData }) {
+  const category = getCategoryById(b.category_id);
   return (
     <Link to={`/blogs/${b.slug}`} className="group block bg-card border border-border card-hover">
       {b.cover_image && (
@@ -30,9 +32,9 @@ export function BlogCard({ b }: { b: BlogCardData }) {
         </div>
       )}
       <div className="p-5">
-        {b.category && (
+        {category && (
           <span className="inline-block text-xs font-medium uppercase tracking-wider text-accent mb-2">
-            {b.category.name}
+            {category.name}
           </span>
         )}
         <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:text-accent transition-colors">
