@@ -1,20 +1,21 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getYouTubeId } from "@/lib/content";
-import { VideoCard } from "@/components/site/VideoCard";
+import { getYouTubeId, getYouTubeThumb } from "@/lib/content";
 import { videos, getCategoryById } from "@/lib/mockData";
+import Comments from "@/components/site/Comments";
 
 export default function VideoDetail() {
   const { id } = useParams();
   const video = useMemo(() => videos.find((v) => v.id === id), [id]);
   const category = getCategoryById(video?.category_id);
-  const related = useMemo(
-    () => video ? videos.filter((v) => v.id !== video.id && v.category_id === video.category_id).slice(0, 3) : [],
+  const recommendations = useMemo(
+    () => video ? videos.filter((v) => v.id !== video.id).slice(0, 8) : [],
     [video]
   );
 
   useEffect(() => {
     if (video) document.title = `${video.title} — Hertech`;
+    window.scrollTo(0, 0);
   }, [video]);
 
   if (!video) return <div className="container-page py-20 text-center">Video not found. <Link to="/videos" className="text-accent">Back to videos</Link></div>;
@@ -24,7 +25,7 @@ export default function VideoDetail() {
   return (
     <div className="container-page py-8 lg:py-10">
       <div className="grid lg:grid-cols-3 gap-8">
-        <article className="lg:col-span-2">
+        <div className="lg:col-span-2 min-w-0">
           <div className="aspect-video bg-primary mb-6">
             {ytId ? (
               <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${ytId}`} title={video.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -44,14 +45,38 @@ export default function VideoDetail() {
               ))}
             </div>
           )}
-        </article>
 
-        <aside>
-          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4">Related</h2>
-          <div className="grid gap-4">
-            {related.length === 0 && <p className="text-sm text-muted-foreground">No related videos yet.</p>}
-            {related.map((v) => <VideoCard key={v.id} v={v} />)}
-          </div>
+          <Comments videoId={video.id} />
+        </div>
+
+        <aside className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider mb-2">Up next</h2>
+          {recommendations.map((v) => (
+            <Link
+              key={v.id}
+              to={`/videos/${v.id}`}
+              className="flex gap-3 bg-card border border-border p-2 hover:border-accent transition-colors group"
+            >
+              <div className="relative w-32 aspect-video shrink-0 overflow-hidden bg-secondary">
+                <img
+                  src={getYouTubeThumb(v.youtube_url, v.thumbnail)}
+                  alt={v.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+              </div>
+              <div className="min-w-0 py-1">
+                <h3 className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+                  {v.title}
+                </h3>
+                {getCategoryById(v.category_id) && (
+                  <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {getCategoryById(v.category_id)?.name}
+                  </div>
+                )}
+              </div>
+            </Link>
+          ))}
         </aside>
       </div>
     </div>
