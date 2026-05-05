@@ -53,8 +53,24 @@ export default function AdminLayout() {
           </Button>
         </div>
       </aside>
-      <main className="flex-1 bg-surface">
-        <div className="p-6 lg:p-10 max-w-6xl">
+      <main className="flex-1 bg-surface flex flex-col min-w-0">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
+          <div className="flex items-center justify-between px-6 lg:px-10 h-14">
+            <div className="text-sm text-muted-foreground">Admin dashboard</div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-none"
+                onClick={() => setConfirmOut(true)}
+              >
+                <LogOut className="h-3 w-3 mr-2" /> Sign out
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="p-6 lg:p-10 max-w-6xl w-full">
           <Outlet />
         </div>
       </main>
