@@ -4,14 +4,17 @@ import { VideoCard } from "@/components/site/VideoCard";
 import { BlogCard } from "@/components/site/BlogCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Cpu } from "lucide-react";
-import { videos, blogs, categories } from "@/lib/mockData";
+import { useBlogs, useCategories, useVideos } from "@/hooks/useSupabaseData";
 
 export default function Home() {
+  const { data: videos = [] } = useVideos();
+  const { data: blogs = [] } = useBlogs();
+  const { data: categories = [] } = useCategories();
   useEffect(() => { document.title = "Hertech — AI & Tech Content for Women"; }, []);
 
-  const trending = useMemo(() => videos.filter((v) => v.trending).slice(0, 8), []);
-  const featured = useMemo(() => videos.filter((v) => v.featured).slice(0, 6), []);
-  const recentBlogs = useMemo(() => blogs.slice(0, 3), []);
+  const trending = useMemo(() => videos.filter((v) => v.trending).slice(0, 8), [videos]);
+  const featured = useMemo(() => videos.filter((v) => v.featured).slice(0, 6), [videos]);
+  const recentBlogs = useMemo(() => blogs.slice(0, 3), [blogs]);
 
   return (
     <>

@@ -1,21 +1,24 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { BlogCard } from "@/components/site/BlogCard";
-import { blogs, getCategoryById } from "@/lib/mockData";
+import { useBlogBySlug, useBlogs, useCategories } from "@/hooks/useSupabaseData";
 
 export default function BlogDetail() {
   const { slug } = useParams();
-  const blog = useMemo(() => blogs.find((b) => b.slug === slug), [slug]);
-  const category = getCategoryById(blog?.category_id);
+  const { data: blog, isLoading } = useBlogBySlug(slug);
+  const { data: blogs = [] } = useBlogs();
+  const { data: categories = [] } = useCategories();
+  const category = blog ? categories.find((c) => c.id === blog.category_id) || null : null;
   const related = useMemo(
-    () => blog ? blogs.filter((b) => b.id !== blog.id).slice(0, 3) : [],
-    [blog]
+    () => (blog ? blogs.filter((b) => b.id !== blog.id).slice(0, 3) : []),
+    [blog, blogs]
   );
 
   useEffect(() => {
     if (blog) document.title = `${blog.title} — Hertech`;
   }, [blog]);
 
+  if (isLoading) return <div className="container-page py-20 text-center text-muted-foreground">Loading…</div>;
   if (!blog) return <div className="container-page py-20 text-center">Blog not found. <Link to="/blogs" className="text-accent">Back to blogs</Link></div>;
 
   return (

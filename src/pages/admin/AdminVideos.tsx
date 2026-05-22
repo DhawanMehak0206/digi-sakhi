@@ -3,38 +3,76 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import { getYouTubeThumb } from "@/lib/content";
-import {
-  videos as videosData, categories, addVideo, updateVideo, deleteVideo, type Video,
-} from "@/lib/mockData";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCategories, useQuizzes, useVideos } from "@/hooks/useSupabaseData";
+import { deleteVideo, upsertVideo } from "@/lib/supabaseApi";
 import ConfirmDialog from "@/components/site/ConfirmDialog";
 
-const empty: Omit<Video, "id" | "created_at"> = {
+type VideoShape = {
+  id?: string;
+  created_at?: string;
+  title: string;
+  youtube_url: string;
+  thumbnail: string | null;
+  description: string | null;
+  category_id: string | null;
+  tags: string[];
+  quiz_id: string | null;
+  featured: boolean;
+  trending: boolean;
+};
+
+const empty: VideoShape = {
   title: "", youtube_url: "", thumbnail: "", description: "",
-  category_id: null, tags: [], featured: false, trending: false,
+  category_id: null, tags: [], quiz_id: null, featured: false, trending: false,
 };
 
 export default function AdminVideos() {
-  const [, force] = useState(0);
-  const refresh = () => force((n) => n + 1);
-  const [editing, setEditing] = useState<any | null>(null);
+  const qc = useQueryClient();
+  const { data: videosData = [] } = useVideos();
+  const { data: categories = [] } = useCategories();
+  const { data: quizzes = [] } = useQuizzes();
+  const [editing, setEditing] = useState<VideoShape | null>(null);
   const [tagsInput, setTagsInput] = useState("");
   const [delId, setDelId] = useState<string | null>(null);
 
   const openNew = () => { setEditing({ ...empty }); setTagsInput(""); };
-  const openEdit = (v: Video) => { setEditing(v); setTagsInput((v.tags || []).join(", ")); };
+  const openEdit = (v: any) => { setEditing(v); setTagsInput((v.tags || []).join(", ")); };
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: VideoShape) => {
+      const { id, created_at, ...rest } = payload;
+      return upsertVideo({
+        ...(id ? { id } : {}),
+        ...rest,
+        thumbnail: rest.thumbnail || null,
+        description: rest.description || null,
+        tags: rest.tags || [],
+      } as any);
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["videos"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => deleteVideo(id),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["videos"] });
+    },
+  });
 
   const save = () => {
     if (!editing.title || !editing.youtube_url) { toast.error("Title and YouTube URL are required"); return; }
     const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-    const payload = { ...editing, tags, thumbnail: editing.thumbnail || null };
-    if (editing.id) {
-      updateVideo(editing.id, payload);
-    } else {
-      const { id, created_at, ...rest } = payload;
-      addVideo(rest);
-    }
-    toast.success("Saved");
-    setEditing(null); refresh();
+    const payload: VideoShape = { ...editing, tags, thumbnail: editing.thumbnail || null };
+    saveMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Saved");
+        setEditing(null);
+      },
+      onError: (e: any) => toast.error(e.message || "Save failed"),
+    });
   };
 
   return (
@@ -55,7 +93,7 @@ export default function AdminVideos() {
               <div className="mt-1 flex flex-wrap gap-1 text-xs">
                 {v.featured && <span className="bg-accent-soft text-accent px-2 py-0.5">Featured</span>}
                 {v.trending && <span className="bg-accent-soft text-accent px-2 py-0.5">Trending</span>}
-                {v.tags.slice(0, 3).map((t) => <span key={t} className="bg-secondary px-2 py-0.5">#{t}</span>)}
+                {(v.tags || []).slice(0, 3).map((t: string) => <span key={t} className="bg-secondary px-2 py-0.5">#{t}</span>)}
               </div>
             </div>
             <div className="flex gap-2">
@@ -93,6 +131,20 @@ export default function AdminVideos() {
                   {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </Field>
+              <Field label="Quiz (optional)">
+                <select
+                  value={editing.quiz_id || ""}
+                  onChange={(e) => setEditing({ ...editing, quiz_id: e.target.value || null })}
+                  className={inp}
+                >
+                  <option value="">— None —</option>
+                  {quizzes.map((q) => (
+                    <option key={q.id} value={q.id}>
+                      {q.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editing.featured} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })} /> Featured</label>
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editing.trending} onChange={(e) => setEditing({ ...editing, trending: e.target.checked })} /> Trending</label>
@@ -113,7 +165,13 @@ export default function AdminVideos() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         destructive
-        onConfirm={() => { if (delId) { deleteVideo(delId); toast.success("Deleted"); refresh(); } }}
+        onConfirm={() => {
+          if (!delId) return;
+          deleteMutation.mutate(delId, {
+            onSuccess: () => { toast.success("Deleted"); setDelId(null); },
+            onError: (e: any) => toast.error(e.message || "Delete failed"),
+          });
+        }}
       />
     </div>
   );

@@ -6,12 +6,42 @@ export interface Video {
   id: string; title: string; description: string;
   youtube_url: string; thumbnail?: string | null;
   category_id: string | null; tags: string[];
+  quiz_id: string | null;
   featured: boolean; trending: boolean; created_at: string;
 }
 export interface Blog {
   id: string; title: string; slug: string; content: string;
   cover_image?: string | null; tags: string[];
   category_id: string | null; featured: boolean; created_at: string;
+}
+export interface QuizOption { id: string; text: string; is_correct: boolean }
+export type QuizQuestionType = "single" | "multiple";
+export interface QuizQuestion { id: string; type: QuizQuestionType; text: string; options: QuizOption[] }
+export interface QuestionSet {
+  id: string;
+  title: string;
+  description: string;
+  questions: QuizQuestion[];
+  created_at: string;
+}
+export interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  question_set_ids: string[];
+  published: boolean;
+  created_at: string;
+}
+export interface CourseVideoItem {
+  video_id: string;
+  locked: boolean;
+}
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  items: CourseVideoItem[];
+  created_at: string;
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -30,6 +60,7 @@ export const videos: Video[] = [
     description: "A beginner-friendly explanation of how generative AI models work, from training to prompting, with real-world examples.",
     youtube_url: "https://www.youtube.com/watch?v=2IK3DFHRFfw",
     thumbnail: null, category_id: "c1", tags: ["ai", "beginners", "explainer"],
+    quiz_id: null,
     featured: true, trending: true, created_at: new Date(Date.now() - 1*864e5).toISOString(),
   },
   {
@@ -37,6 +68,7 @@ export const videos: Video[] = [
     description: "Practical workflows to plan your week, draft emails, and brainstorm ideas using ChatGPT effectively.",
     youtube_url: "https://www.youtube.com/watch?v=jPLG3K9Z6IE",
     thumbnail: null, category_id: "c4", tags: ["chatgpt", "productivity"],
+    quiz_id: null,
     featured: true, trending: true, created_at: new Date(Date.now() - 2*864e5).toISOString(),
   },
   {
@@ -44,6 +76,7 @@ export const videos: Video[] = [
     description: "Learn the core patterns of writing prompts that get reliable, high-quality outputs from any LLM.",
     youtube_url: "https://www.youtube.com/watch?v=dOxUroR57xs",
     thumbnail: null, category_id: "c1", tags: ["prompting", "ai"],
+    quiz_id: null,
     featured: false, trending: true, created_at: new Date(Date.now() - 3*864e5).toISOString(),
   },
   {
@@ -51,6 +84,7 @@ export const videos: Video[] = [
     description: "A curated walkthrough of seven AI tools to speed up writing, design, and research.",
     youtube_url: "https://www.youtube.com/watch?v=NBpVjHe5Wbk",
     thumbnail: null, category_id: "c2", tags: ["tools", "creators"],
+    quiz_id: null,
     featured: true, trending: false, created_at: new Date(Date.now() - 4*864e5).toISOString(),
   },
   {
@@ -58,6 +92,7 @@ export const videos: Video[] = [
     description: "Step-by-step roadmap for women transitioning into tech roles, from learning paths to interviews.",
     youtube_url: "https://www.youtube.com/watch?v=zOjov-2OZ0E",
     thumbnail: null, category_id: "c3", tags: ["career", "switch"],
+    quiz_id: null,
     featured: false, trending: true, created_at: new Date(Date.now() - 5*864e5).toISOString(),
   },
   {
@@ -65,6 +100,7 @@ export const videos: Video[] = [
     description: "Your first hour with Python — variables, loops, and a small project you can actually run.",
     youtube_url: "https://www.youtube.com/watch?v=kqtD5dpn9C8",
     thumbnail: null, category_id: "c5", tags: ["python", "beginners"],
+    quiz_id: null,
     featured: true, trending: false, created_at: new Date(Date.now() - 6*864e5).toISOString(),
   },
   {
@@ -72,6 +108,7 @@ export const videos: Video[] = [
     description: "A short documentary on how teams are integrating AI into hiring, design, and operations.",
     youtube_url: "https://www.youtube.com/watch?v=5p248yoa3oE",
     thumbnail: null, category_id: "c1", tags: ["ai", "workplace"],
+    quiz_id: null,
     featured: false, trending: true, created_at: new Date(Date.now() - 7*864e5).toISOString(),
   },
   {
@@ -79,6 +116,7 @@ export const videos: Video[] = [
     description: "Plug AI into your Figma workflow to ideate, iterate, and ship interfaces faster.",
     youtube_url: "https://www.youtube.com/watch?v=FOhSGOMPeEk",
     thumbnail: null, category_id: "c2", tags: ["design", "figma"],
+    quiz_id: null,
     featured: false, trending: false, created_at: new Date(Date.now() - 8*864e5).toISOString(),
   },
 ];
@@ -153,6 +191,15 @@ export const blogs: Blog[] = [
 export const getCategoryById = (id?: string | null) =>
   id ? categories.find((c) => c.id === id) || null : null;
 
+export const quizzes: Quiz[] = [];
+export const questionSets: QuestionSet[] = [];
+export const courses: Course[] = [];
+
+export const getQuizById = (id?: string | null) => (id ? quizzes.find((q) => q.id === id) || null : null);
+export const getQuestionSetById = (id?: string | null) =>
+  id ? questionSets.find((s) => s.id === id) || null : null;
+export const getCourseById = (id?: string | null) => (id ? courses.find((c) => c.id === id) || null : null);
+
 // Mutators (admin)
 export const addVideo = (v: Omit<Video, "id" | "created_at">) =>
   videos.unshift({ ...v, id: uid(), created_at: new Date().toISOString() });
@@ -183,4 +230,43 @@ export const addCategory = (name: string) =>
 export const deleteCategory = (id: string) => {
   const i = categories.findIndex((c) => c.id === id);
   if (i >= 0) categories.splice(i, 1);
+};
+
+export const addQuiz = (q: Omit<Quiz, "id" | "created_at">) =>
+  quizzes.unshift({ ...q, id: uid(), created_at: new Date().toISOString() });
+export const updateQuiz = (id: string, patch: Partial<Quiz>) => {
+  const i = quizzes.findIndex((q) => q.id === id);
+  if (i >= 0) quizzes[i] = { ...quizzes[i], ...patch };
+};
+export const deleteQuiz = (id: string) => {
+  const i = quizzes.findIndex((q) => q.id === id);
+  if (i >= 0) quizzes.splice(i, 1);
+};
+
+export const addQuestionSet = (s: Omit<QuestionSet, "id" | "created_at">) =>
+  questionSets.unshift({ ...s, id: uid(), created_at: new Date().toISOString() });
+export const updateQuestionSet = (id: string, patch: Partial<QuestionSet>) => {
+  const i = questionSets.findIndex((s) => s.id === id);
+  if (i >= 0) questionSets[i] = { ...questionSets[i], ...patch };
+};
+export const deleteQuestionSet = (id: string) => {
+  const i = questionSets.findIndex((s) => s.id === id);
+  if (i >= 0) questionSets.splice(i, 1);
+  // detach from quizzes
+  quizzes.forEach((q, idx) => {
+    if (q.question_set_ids.includes(id)) {
+      quizzes[idx] = { ...q, question_set_ids: q.question_set_ids.filter((sid) => sid !== id) };
+    }
+  });
+};
+
+export const addCourse = (c: Omit<Course, "id" | "created_at">) =>
+  courses.unshift({ ...c, id: uid(), created_at: new Date().toISOString() });
+export const updateCourse = (id: string, patch: Partial<Course>) => {
+  const i = courses.findIndex((c) => c.id === id);
+  if (i >= 0) courses[i] = { ...courses[i], ...patch };
+};
+export const deleteCourse = (id: string) => {
+  const i = courses.findIndex((c) => c.id === id);
+  if (i >= 0) courses.splice(i, 1);
 };

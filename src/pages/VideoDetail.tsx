@@ -1,16 +1,18 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getYouTubeId, getYouTubeThumb } from "@/lib/content";
-import { videos, getCategoryById } from "@/lib/mockData";
+import { useCategories, useVideo, useVideos } from "@/hooks/useSupabaseData";
 import Comments from "@/components/site/Comments";
 
 export default function VideoDetail() {
   const { id } = useParams();
-  const video = useMemo(() => videos.find((v) => v.id === id), [id]);
-  const category = getCategoryById(video?.category_id);
+  const { data: video, isLoading } = useVideo(id);
+  const { data: videos = [] } = useVideos();
+  const { data: categories = [] } = useCategories();
+  const category = video ? categories.find((c) => c.id === video.category_id) || null : null;
   const recommendations = useMemo(
-    () => video ? videos.filter((v) => v.id !== video.id).slice(0, 8) : [],
-    [video]
+    () => (video ? videos.filter((v) => v.id !== video.id).slice(0, 8) : []),
+    [video, videos]
   );
 
   useEffect(() => {
@@ -18,6 +20,7 @@ export default function VideoDetail() {
     window.scrollTo(0, 0);
   }, [video]);
 
+  if (isLoading) return <div className="container-page py-20 text-center text-muted-foreground">Loading…</div>;
   if (!video) return <div className="container-page py-20 text-center">Video not found. <Link to="/videos" className="text-accent">Back to videos</Link></div>;
 
   const ytId = getYouTubeId(video.youtube_url);
@@ -69,9 +72,9 @@ export default function VideoDetail() {
                 <h3 className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-accent transition-colors">
                   {v.title}
                 </h3>
-                {getCategoryById(v.category_id) && (
+                {v.category_id && (categories.find((c) => c.id === v.category_id) || null) && (
                   <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {getCategoryById(v.category_id)?.name}
+                    {(categories.find((c) => c.id === v.category_id) || null)?.name}
                   </div>
                 )}
               </div>

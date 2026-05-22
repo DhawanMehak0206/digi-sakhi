@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import RichTextEditor from "@/components/site/RichTextEditor";
 import ImageUpload from "@/components/site/ImageUpload";
-import {
-  blogs as blogsData, categories, addBlog, updateBlog, deleteBlog, type Blog,
-} from "@/lib/mockData";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useBlogs, useCategories } from "@/hooks/useSupabaseData";
+import { deleteBlog, upsertBlog } from "@/lib/supabaseApi";
+import { slugify } from "@/lib/content";
 import ConfirmDialog from "@/components/site/ConfirmDialog";
 
 const empty = {
@@ -15,27 +16,51 @@ const empty = {
 };
 
 export default function AdminBlogs() {
-  const [, force] = useState(0);
-  const refresh = () => force((n) => n + 1);
+  const qc = useQueryClient();
+  const { data: blogsData = [] } = useBlogs();
+  const { data: categories = [] } = useCategories();
   const [editing, setEditing] = useState<any | null>(null);
   const [tagsInput, setTagsInput] = useState("");
   const [delId, setDelId] = useState<string | null>(null);
 
   const openNew = () => { setEditing({ ...empty }); setTagsInput(""); };
-  const openEdit = (b: Blog) => { setEditing(b); setTagsInput((b.tags || []).join(", ")); };
+  const openEdit = (b: any) => { setEditing(b); setTagsInput((b.tags || []).join(", ")); };
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: any) => upsertBlog(payload),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["blogs"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => deleteBlog(id),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["blogs"] });
+    },
+  });
 
   const save = () => {
     if (!editing.title) return toast.error("Title is required");
     const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-    const payload = { ...editing, tags, cover_image: editing.cover_image || null };
-    if (editing.id) {
-      updateBlog(editing.id, payload);
-    } else {
-      const { id, created_at, ...rest } = payload;
-      addBlog(rest);
-    }
-    toast.success("Saved");
-    setEditing(null); refresh();
+    const slug = (editing.slug || "").trim() || slugify(editing.title);
+    const payload = {
+      ...(editing.id ? { id: editing.id } : {}),
+      title: editing.title,
+      slug,
+      content: editing.content || "",
+      cover_image: editing.cover_image || null,
+      tags,
+      category_id: editing.category_id || null,
+      featured: !!editing.featured,
+    };
+    saveMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Saved");
+        setEditing(null);
+      },
+      onError: (e: any) => toast.error(e.message || "Save failed"),
+    });
   };
 
   return (
@@ -112,7 +137,13 @@ export default function AdminBlogs() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         destructive
-        onConfirm={() => { if (delId) { deleteBlog(delId); toast.success("Deleted"); refresh(); } }}
+        onConfirm={() => {
+          if (!delId) return;
+          deleteMutation.mutate(delId, {
+            onSuccess: () => { toast.success("Deleted"); setDelId(null); },
+            onError: (e: any) => toast.error(e.message || "Delete failed"),
+          });
+        }}
       />
     </div>
   );

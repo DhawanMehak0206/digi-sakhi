@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Video, FileText, Tag, ArrowLeft } from "lucide-react";
+import { LogOut, Video, FileText, GraduationCap, ArrowLeft, ListChecks } from "lucide-react";
 import { adminAuth, useAdminAuth } from "@/hooks/useAdminAuth";
 import ConfirmDialog from "@/components/site/ConfirmDialog";
 import ThemeToggle from "@/components/site/ThemeToggle";
@@ -18,7 +18,8 @@ export default function AdminLayout() {
   const items = [
     { to: "/admin", label: "Videos", icon: Video, end: true },
     { to: "/admin/blogs", label: "Blogs", icon: FileText },
-    { to: "/admin/categories", label: "Categories", icon: Tag },
+    { to: "/admin/courses", label: "Courses", icon: GraduationCap },
+    { to: "/admin/quizzes", label: "Quizzes", icon: ListChecks },
   ];
 
   return (

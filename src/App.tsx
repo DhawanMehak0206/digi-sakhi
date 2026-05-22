@@ -16,8 +16,11 @@ import AdminAuth from "./pages/admin/AdminAuth";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminVideos from "./pages/admin/AdminVideos";
 import AdminBlogs from "./pages/admin/AdminBlogs";
-import AdminCategories from "./pages/admin/AdminCategories";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminQuizzes from "./pages/admin/AdminQuizzes";
 import NotFound from "./pages/NotFound";
+import Courses from "./pages/Courses";
+import CoursePlayer from "./pages/CoursePlayer";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,8 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/videos/:id" element={<VideoDetail />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:id" element={<CoursePlayer />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/category/:name" element={<CategoryPage />} />
@@ -42,7 +47,8 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminVideos />} />
             <Route path="blogs" element={<AdminBlogs />} />
-            <Route path="categories" element={<AdminCategories />} />
+            <Route path="courses" element={<AdminCourses />} />
+            <Route path="quizzes" element={<AdminQuizzes />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

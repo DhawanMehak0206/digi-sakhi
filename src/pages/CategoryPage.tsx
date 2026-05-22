@@ -2,18 +2,24 @@ import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { VideoCard } from "@/components/site/VideoCard";
 import { BlogCard } from "@/components/site/BlogCard";
-import { categories, videos, blogs } from "@/lib/mockData";
+import { useBlogs, useCategories, useVideos } from "@/hooks/useSupabaseData";
 
 export default function CategoryPage() {
   const { name } = useParams();
-  const cat = useMemo(() => categories.find((c) => c.slug === name), [name]);
-  const cVideos = useMemo(() => cat ? videos.filter((v) => v.category_id === cat.id) : [], [cat]);
-  const cBlogs = useMemo(() => cat ? blogs.filter((b) => b.category_id === cat.id) : [], [cat]);
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: videos = [], isLoading: videosLoading } = useVideos();
+  const { data: blogs = [], isLoading: blogsLoading } = useBlogs();
+  const cat = useMemo(() => categories.find((c) => c.slug === name), [name, categories]);
+  const cVideos = useMemo(() => (cat ? videos.filter((v) => v.category_id === cat.id) : []), [cat, videos]);
+  const cBlogs = useMemo(() => (cat ? blogs.filter((b) => b.category_id === cat.id) : []), [cat, blogs]);
 
   useEffect(() => {
     if (cat) document.title = `${cat.name} — Hertech`;
   }, [cat]);
 
+  if (categoriesLoading || videosLoading || blogsLoading) {
+    return <div className="container-page py-20 text-center text-muted-foreground">Loading…</div>;
+  }
   if (!cat) return <div className="container-page py-20 text-center text-muted-foreground">Category not found.</div>;
 
   return (

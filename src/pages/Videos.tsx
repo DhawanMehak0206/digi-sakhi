@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { VideoCard } from "@/components/site/VideoCard";
-import { videos, categories } from "@/lib/mockData";
+import { useCategories, useVideos } from "@/hooks/useSupabaseData";
 
 export default function Videos() {
   const [active, setActive] = useState<string | null>(null);
+  const { data: videos = [], isLoading: videosLoading } = useVideos();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
 
   useEffect(() => { document.title = "Videos — Hertech"; }, []);
 
   const list = useMemo(
     () => active ? videos.filter((v) => v.category_id === active) : videos,
-    [active]
+    [active, videos]
   );
 
   return (
@@ -25,6 +27,10 @@ export default function Videos() {
           <button key={c.id} onClick={() => setActive(c.id)} className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px ${active === c.id ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{c.name}</button>
         ))}
       </div>
+
+      {(videosLoading || categoriesLoading) && (
+        <div className="py-20 text-center text-muted-foreground">Loading…</div>
+      )}
 
       {list.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">No videos in this category.</div>

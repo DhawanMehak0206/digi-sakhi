@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { getCategoryById } from "@/lib/mockData";
+import { useCategories } from "@/hooks/useSupabaseData";
 
 export interface BlogCardData {
   id: string;
@@ -18,7 +18,8 @@ function excerpt(s: string, n = 140) {
 }
 
 export function BlogCard({ b }: { b: BlogCardData }) {
-  const category = getCategoryById(b.category_id);
+  const { data: categories = [] } = useCategories();
+  const category = categories.find((c) => c.id === b.category_id) || null;
   return (
     <Link to={`/blogs/${b.slug}`} className="group block bg-card border border-border card-hover">
       {b.cover_image && (

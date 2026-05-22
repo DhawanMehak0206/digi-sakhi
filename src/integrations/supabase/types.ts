@@ -107,7 +107,9 @@ export type Database = {
           description: string | null
           featured: boolean
           id: string
+          quiz_id: string | null
           thumbnail: string | null
+          tags: string[]
           title: string
           trending: boolean
           youtube_url: string
@@ -118,7 +120,9 @@ export type Database = {
           description?: string | null
           featured?: boolean
           id?: string
+          quiz_id?: string | null
           thumbnail?: string | null
+          tags?: string[]
           title: string
           trending?: boolean
           youtube_url: string
@@ -129,7 +133,9 @@ export type Database = {
           description?: string | null
           featured?: boolean
           id?: string
+          quiz_id?: string | null
           thumbnail?: string | null
+          tags?: string[]
           title?: string
           trending?: boolean
           youtube_url?: string
@@ -140,6 +146,163 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      course_items: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          locked: boolean
+          position: number
+          video_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          locked?: boolean
+          position?: number
+          video_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          locked?: boolean
+          position?: number
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_items_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_sets: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          questions: Json
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          questions?: Json
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          questions?: Json
+          title?: string
+        }
+        Relationships: []
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          published: boolean
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          published?: boolean
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          published?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
+      quiz_question_sets: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          question_set_id: string
+          quiz_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          question_set_id: string
+          quiz_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          question_set_id?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_question_sets_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_question_sets_question_set_id_fkey"
+            columns: ["question_set_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
             referencedColumns: ["id"]
           },
         ]

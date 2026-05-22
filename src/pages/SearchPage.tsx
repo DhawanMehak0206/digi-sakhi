@@ -3,9 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { VideoCard } from "@/components/site/VideoCard";
 import { BlogCard } from "@/components/site/BlogCard";
 import { Search } from "lucide-react";
-import { videos, blogs } from "@/lib/mockData";
+import { useBlogs, useVideos } from "@/hooks/useSupabaseData";
 
 export default function SearchPage() {
+  const { data: videos = [], isLoading: videosLoading } = useVideos();
+  const { data: blogs = [], isLoading: blogsLoading } = useBlogs();
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
 
@@ -35,6 +37,9 @@ export default function SearchPage() {
 
       {term && (
         <>
+          {(videosLoading || blogsLoading) && (
+            <div className="py-10 text-sm text-muted-foreground">Loading…</div>
+          )}
           <section className="mb-12">
             <h2 className="text-xl font-bold mb-5">Videos ({vResults.length})</h2>
             {vResults.length === 0 ? <p className="text-sm text-muted-foreground">No videos found.</p> : (

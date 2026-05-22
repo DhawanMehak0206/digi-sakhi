@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { getYouTubeThumb } from "@/lib/content";
 import { PlayCircle } from "lucide-react";
-import { getCategoryById } from "@/lib/mockData";
+import { useCategories } from "@/hooks/useSupabaseData";
 
 export interface VideoCardData {
   id: string;
@@ -14,7 +14,8 @@ export interface VideoCardData {
 }
 
 export function VideoCard({ v }: { v: VideoCardData }) {
-  const category = getCategoryById(v.category_id);
+  const { data: categories = [] } = useCategories();
+  const category = categories.find((c) => c.id === v.category_id) || null;
   return (
     <Link to={`/videos/${v.id}`} className="group block bg-card border border-border card-hover">
       <div className="relative aspect-video overflow-hidden bg-secondary">
