@@ -12,7 +12,8 @@ import BlogDetail from "./pages/BlogDetail";
 import CategoryPage from "./pages/CategoryPage";
 import SearchPage from "./pages/SearchPage";
 import Contact from "./pages/Contact";
-import AdminAuth from "./pages/admin/AdminAuth";
+import AuthPage from "./pages/Auth";
+import AccountPage from "./pages/Account";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminVideos from "./pages/admin/AdminVideos";
 import AdminBlogs from "./pages/admin/AdminBlogs";
@@ -42,8 +43,9 @@ const App = () => (
             <Route path="/category/:name" element={<CategoryPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/contact" element={<Contact />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/account" element={<AccountPage />} />
           </Route>
-          <Route path="/admin/auth" element={<AdminAuth />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminVideos />} />
             <Route path="blogs" element={<AdminBlogs />} />

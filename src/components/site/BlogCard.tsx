@@ -20,6 +20,7 @@ function excerpt(s: string, n = 140) {
 export function BlogCard({ b }: { b: BlogCardData }) {
   const { data: categories = [] } = useCategories();
   const category = categories.find((c) => c.id === b.category_id) || null;
+  const categoryLabel = category?.name || "Other";
   return (
     <Link to={`/blogs/${b.slug}`} className="group block bg-card border border-border card-hover">
       {b.cover_image && (
@@ -33,11 +34,9 @@ export function BlogCard({ b }: { b: BlogCardData }) {
         </div>
       )}
       <div className="p-5">
-        {category && (
-          <span className="inline-block text-xs font-medium uppercase tracking-wider text-accent mb-2">
-            {category.name}
-          </span>
-        )}
+        <span className="inline-block text-xs font-medium uppercase tracking-wider text-accent mb-2">
+          {categoryLabel}
+        </span>
         <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:text-accent transition-colors">
           {b.title}
         </h3>

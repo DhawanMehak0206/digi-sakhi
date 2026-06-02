@@ -6,6 +6,9 @@ export type VideoRow = Tables<"videos">;
 export type BlogRow = Tables<"blogs">;
 export type CourseRow = Tables<"courses">;
 export type CourseItemRow = Tables<"course_items">;
+export type CommentRow = Tables<"comments">;
+export type UserVideoProgressRow = Tables<"user_video_progress">;
+export type UserQuizProgressRow = Tables<"user_quiz_progress">;
 export type QuizRow = Tables<"quizzes">;
 export type QuestionSetRow = Tables<"question_sets">;
 export type QuizQuestionSetRow = Tables<"quiz_question_sets">;
@@ -14,6 +17,17 @@ export async function listCategories() {
   const { data, error } = await supabase.from("categories").select("*").order("name");
   if (error) throw error;
   return data;
+}
+
+export async function upsertCategory(category: TablesInsert<"categories"> | (TablesUpdate<"categories"> & { id?: string })) {
+  const { data, error } = await supabase.from("categories").upsert(category as any).select("*").single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCategory(id: string) {
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) throw error;
 }
 
 export async function listVideos() {
@@ -37,6 +51,62 @@ export async function upsertVideo(v: TablesInsert<"videos"> | TablesUpdate<"vide
 export async function deleteVideo(id: string) {
   const { error } = await supabase.from("videos").delete().eq("id", id);
   if (error) throw error;
+}
+
+export async function listUserVideoProgress(userId: string) {
+  const { data, error } = await supabase
+    .from("user_video_progress")
+    .select("*")
+    .eq("user_id", userId)
+    .order("completed_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function listUserQuizProgress(userId: string) {
+  const { data, error } = await supabase
+    .from("user_quiz_progress")
+    .select("*")
+    .eq("user_id", userId)
+    .order("passed_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function upsertUserVideoProgress(userId: string, videoId: string) {
+  const { data, error } = await supabase
+    .from("user_video_progress")
+    .upsert({ user_id: userId, video_id: videoId, completed_at: new Date().toISOString() }, { onConflict: "user_id,video_id" })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertUserQuizProgress(userId: string, quizId: string) {
+  const { data, error } = await supabase
+    .from("user_quiz_progress")
+    .upsert({ user_id: userId, quiz_id: quizId, passed_at: new Date().toISOString() }, { onConflict: "user_id,quiz_id" })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listComments(videoId: string) {
+  const { data, error } = await supabase
+    .from("comments")
+    .select("*")
+    .eq("video_id", videoId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createComment(comment: TablesInsert<"comments">) {
+  const { data, error } = await supabase.from("comments").insert(comment).select("*").single();
+  if (error) throw error;
+  return data;
 }
 
 export async function listBlogs() {
@@ -182,4 +252,3 @@ export async function deleteQuiz(id: string) {
 export function parseJsonArray<T>(v: Json, fallback: T[] = []): T[] {
   return Array.isArray(v) ? (v as any as T[]) : fallback;
 }
-

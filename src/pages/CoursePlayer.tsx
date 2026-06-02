@@ -6,39 +6,14 @@ import { Button } from "@/components/ui/button";
 import { getYouTubeId } from "@/lib/content";
 import { useCourse, useQuestionSets, useQuizzes, useVideos } from "@/hooks/useSupabaseData";
 import { parseJsonArray } from "@/lib/supabaseApi";
+import { useLearningProgress } from "@/hooks/useLearningProgress";
+import { buildCourseProgress } from "@/lib/learningProgress";
 
 type QuizQuestionType = "single" | "multiple";
 type QuizOption = { id: string; text: string; is_correct: boolean };
 type QuizQuestion = { id: string; type: QuizQuestionType; text: string; options: QuizOption[] };
 type Quiz = { id: string; title: string; description: string; published: boolean; question_set_ids: string[] };
 type QuestionSet = { id: string; title: string; description: string; questions: any };
-
-type CourseProgress = {
-  completedVideoIds: string[];
-  passedQuizIds: string[];
-};
-
-function storageKey(courseId: string) {
-  return `course_progress_${courseId}`;
-}
-
-function loadProgress(courseId: string): CourseProgress {
-  try {
-    const raw = localStorage.getItem(storageKey(courseId));
-    if (!raw) return { completedVideoIds: [], passedQuizIds: [] };
-    const parsed = JSON.parse(raw);
-    return {
-      completedVideoIds: Array.isArray(parsed.completedVideoIds) ? parsed.completedVideoIds : [],
-      passedQuizIds: Array.isArray(parsed.passedQuizIds) ? parsed.passedQuizIds : [],
-    };
-  } catch {
-    return { completedVideoIds: [], passedQuizIds: [] };
-  }
-}
-
-function saveProgress(courseId: string, progress: CourseProgress) {
-  localStorage.setItem(storageKey(courseId), JSON.stringify(progress));
-}
 
 function flattenQuizQuestions(quiz: Quiz, sets: QuestionSet[]): QuizQuestion[] {
   const questions: QuizQuestion[] = [];
@@ -70,9 +45,7 @@ export default function CoursePlayer() {
   const { data: videos = [] } = useVideos();
   const { data: quizzes = [] } = useQuizzes();
   const { data: questionSets = [] } = useQuestionSets();
-
-  const [progress, setProgress] = useState<CourseProgress>(() => (id ? loadProgress(id) : { completedVideoIds: [], passedQuizIds: [] }));
-  useEffect(() => { if (id) saveProgress(id, progress); }, [id, progress]);
+  const { progress, markVideoCompleted, markQuizPassed } = useLearningProgress();
 
   const items = useMemo(
     () =>
@@ -82,37 +55,37 @@ export default function CoursePlayer() {
       })),
     [course],
   );
-  const resolved = useMemo(
-    () => items.map((it) => ({ it, v: videos.find((v) => v.id === it.video_id) || null })),
-    [items, videos],
+  const courseProgress = useMemo(
+    () =>
+      buildCourseProgress(
+        items,
+        videos.map((video) => ({ id: video.id, title: video.title, quiz_id: video.quiz_id })),
+        progress,
+      ),
+    [items, progress, videos],
   );
-
-  const unlocked = useMemo(() => {
-    const map: boolean[] = [];
-    for (let i = 0; i < resolved.length; i++) {
-      if (i === 0) { map[i] = true; continue; }
-      const locked = resolved[i].it.locked;
-      if (!locked) { map[i] = true; continue; }
-      const prevVideo = resolved[i - 1].v;
-      const prevDone = prevVideo ? progress.completedVideoIds.includes(prevVideo.id) : false;
-      const prevQuizId = prevVideo?.quiz_id || null;
-      const prevQuizPassed = prevQuizId ? progress.passedQuizIds.includes(prevQuizId) : true;
-      map[i] = prevDone && prevQuizPassed;
-    }
-    return map;
-  }, [resolved, progress.completedVideoIds, progress.passedQuizIds]);
+  const resolved = useMemo(
+    () => courseProgress.lessons.map((lesson) => ({
+      it: lesson,
+      v: videos.find((v) => v.id === lesson.video_id) || null,
+    })),
+    [courseProgress.lessons, videos],
+  );
+  const unlocked = useMemo(() => courseProgress.lessons.map((lesson) => lesson.unlocked), [courseProgress.lessons]);
 
   const firstUnlockedIndex = useMemo(() => unlocked.findIndex(Boolean), [unlocked]);
   const [idx, setIdx] = useState(() => (firstUnlockedIndex >= 0 ? firstUnlockedIndex : 0));
   useEffect(() => { if (firstUnlockedIndex >= 0) setIdx(firstUnlockedIndex); }, [firstUnlockedIndex]);
 
   const current = resolved[idx]?.v;
-  const currentQuizId = (current as any)?.quiz_id || null;
+  const currentLesson = courseProgress.lessons[idx] || null;
+  const currentQuizId = currentLesson?.quiz_id || null;
   const currentQuiz = currentQuizId ? quizzes.find((q: any) => q.id === currentQuizId) || null : null;
 
-  const currentCompleted = !!(current && progress.completedVideoIds.includes(current.id));
+  const currentCompleted = !!currentLesson?.completed;
+  const currentUnlocked = !!currentLesson?.unlocked;
   const currentQuizPassed = !!(currentQuizId && progress.passedQuizIds.includes(currentQuizId));
-  const needsQuizGate = !!(currentQuizId && currentCompleted && !currentQuizPassed);
+  const needsQuizGate = !!(currentQuizId && !currentQuizPassed);
 
   const canGoNext = useMemo(() => {
     if (idx >= resolved.length - 1) return false;
@@ -121,7 +94,13 @@ export default function CoursePlayer() {
   }, [idx, resolved.length, unlocked, needsQuizGate]);
 
   const [quizOpen, setQuizOpen] = useState(false);
-  useEffect(() => { if (needsQuizGate) setQuizOpen(true); }, [needsQuizGate]);
+  useEffect(() => {
+    if (currentQuizId && !currentQuizPassed) setQuizOpen(true);
+  }, [currentQuizId, currentQuizPassed]);
+  useEffect(() => {
+    if (!current || !currentUnlocked || currentQuizId || currentCompleted) return;
+    void markVideoCompleted(current.id);
+  }, [current, currentCompleted, currentQuizId, currentUnlocked, markVideoCompleted]);
 
   useEffect(() => {
     if (course) document.title = `${course.title} — Hertech`;
@@ -148,15 +127,6 @@ export default function CoursePlayer() {
   }
 
   const ytId = getYouTubeId(current.youtube_url);
-
-  const markComplete = () => {
-    setProgress((p) => ({
-      ...p,
-      completedVideoIds: p.completedVideoIds.includes(current.id) ? p.completedVideoIds : [...p.completedVideoIds, current.id],
-    }));
-    if (current.quiz_id) setQuizOpen(true);
-    toast.success("Marked as completed");
-  };
 
   return (
     <div className="container-page py-8 lg:py-10">
@@ -230,7 +200,7 @@ export default function CoursePlayer() {
 
               {currentQuizId && !currentCompleted && (
                 <div className="text-sm text-muted-foreground">
-                  This lesson has a quiz. Complete the lesson to take the quiz and unlock the next locked video.
+                  This lesson has a quiz. Pass it to unlock the next locked video.
                 </div>
               )}
 
@@ -240,15 +210,18 @@ export default function CoursePlayer() {
                 </div>
               )}
 
+              {!currentQuizId && currentCompleted && (
+                <div className="text-sm text-accent">
+                  Lesson completed automatically.
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button variant="outline" className="rounded-none" onClick={() => setIdx(Math.max(0, idx - 1))} disabled={idx === 0}>
                   Previous
                 </Button>
                 <Button className="rounded-none bg-accent hover:bg-accent/90" onClick={() => setIdx(idx + 1)} disabled={!canGoNext}>
                   Next
-                </Button>
-                <Button variant="outline" className="rounded-none ml-auto" onClick={markComplete}>
-                  Mark completed
                 </Button>
                 {currentQuizId && currentCompleted && !currentQuizPassed && (
                   <Button variant="outline" className="rounded-none" onClick={() => setQuizOpen(true)}>
@@ -272,13 +245,16 @@ export default function CoursePlayer() {
           }}
           questionSets={(questionSets as any) || []}
           onClose={() => setQuizOpen(false)}
-          onPassed={() => {
-            setProgress((p) => ({
-              ...p,
-              passedQuizIds: currentQuizId && !p.passedQuizIds.includes(currentQuizId) ? [...p.passedQuizIds, currentQuizId] : p.passedQuizIds,
-            }));
-            setQuizOpen(false);
-            toast.success("Quiz passed");
+          onPassed={async () => {
+            if (!currentQuizId) return;
+            try {
+              await markQuizPassed(currentQuizId);
+              if (current) await markVideoCompleted(current.id);
+              setQuizOpen(false);
+              toast.success("Quiz passed");
+            } catch (error: any) {
+              toast.error(error.message || "Failed to save quiz result");
+            }
           }}
         />
       )}
@@ -295,7 +271,7 @@ function QuizModal({
   quiz: Quiz;
   questionSets: QuestionSet[];
   onClose: () => void;
-  onPassed: () => void;
+  onPassed: () => void | Promise<void>;
 }) {
   const questions = useMemo(() => flattenQuizQuestions(quiz, questionSets), [quiz, questionSets]);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
@@ -308,7 +284,7 @@ function QuizModal({
       return { ...a, [qid]: cur.includes(oid) ? cur.filter((x) => x !== oid) : [...cur, oid] };
     });
 
-  const submit = () => {
+  const submit = async () => {
     setSubmitting(true);
     try {
       const allCorrect = questions.every((q) => isQuestionCorrect(q, answers[q.id] || []));
@@ -316,7 +292,7 @@ function QuizModal({
         toast.error("Some answers are incorrect. Try again.");
         return;
       }
-      onPassed();
+      await onPassed();
     } finally {
       setSubmitting(false);
     }

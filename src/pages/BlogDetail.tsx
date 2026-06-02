@@ -9,6 +9,7 @@ export default function BlogDetail() {
   const { data: blogs = [] } = useBlogs();
   const { data: categories = [] } = useCategories();
   const category = blog ? categories.find((c) => c.id === blog.category_id) || null : null;
+  const categoryLabel = category?.name || "Other";
   const related = useMemo(
     () => (blog ? blogs.filter((b) => b.id !== blog.id).slice(0, 3) : []),
     [blog, blogs]
@@ -23,9 +24,12 @@ export default function BlogDetail() {
 
   return (
     <article className="container-page py-10 max-w-3xl">
-      {category && (
-        <Link to={`/category/${category.slug}`} className="text-xs uppercase tracking-wider text-accent font-medium">{category.name}</Link>
-      )}
+      <Link
+        to={category ? `/category/${category.slug}` : "/blogs?category=other"}
+        className="text-xs uppercase tracking-wider text-accent font-medium"
+      >
+        {categoryLabel}
+      </Link>
       <h1 className="mt-2 text-3xl md:text-5xl font-bold tracking-tight leading-tight">{blog.title}</h1>
       <div className="mt-3 text-sm text-muted-foreground">
         {new Date(blog.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}

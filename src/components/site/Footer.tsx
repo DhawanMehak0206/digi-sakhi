@@ -1,39 +1,10 @@
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
 import { Mail, Twitter, Linkedin, Instagram, Github, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function Footer() {
   return (
     <footer className="border-t border-border bg-surface mt-20">
-      {/* Newsletter */}
-      <div className="border-b border-border">
-        <div className="container-page py-12 grid gap-8 md:grid-cols-2 items-center">
-          <div>
-            <h3 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Get weekly AI &amp; tech insights
-            </h3>
-            <p className="mt-2 text-muted-foreground">
-              Curated videos, blogs, and tools — delivered every Friday. No spam.
-            </p>
-          </div>
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex flex-col sm:flex-row gap-2 md:justify-end"
-          >
-            <input
-              type="email"
-              required
-              placeholder="you@example.com"
-              className="h-12 px-4 bg-background border border-border rounded-none focus:outline-none focus:border-accent text-sm sm:w-72"
-            />
-            <Button className="h-12 rounded-none bg-accent hover:bg-accent/90">
-              Subscribe <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </form>
-        </div>
-      </div>
-
       {/* Main grid */}
       <div className="container-page py-14 grid gap-10 md:grid-cols-12">
         <div className="md:col-span-4">

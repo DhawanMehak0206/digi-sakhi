@@ -1,15 +1,15 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getYouTubeId, getYouTubeThumb } from "@/lib/content";
-import { useCategories, useVideo, useVideos } from "@/hooks/useSupabaseData";
+import { useCourses, useVideo, useVideos } from "@/hooks/useSupabaseData";
 import Comments from "@/components/site/Comments";
 
 export default function VideoDetail() {
   const { id } = useParams();
   const { data: video, isLoading } = useVideo(id);
   const { data: videos = [] } = useVideos();
-  const { data: categories = [] } = useCategories();
-  const category = video ? categories.find((c) => c.id === video.category_id) || null : null;
+  const { data: courses = [] } = useCourses();
+  const course = video ? courses.find((c) => c.id === video.course_id) || null : null;
   const recommendations = useMemo(
     () => (video ? videos.filter((v) => v.id !== video.id).slice(0, 8) : []),
     [video, videos]
@@ -36,8 +36,8 @@ export default function VideoDetail() {
               <div className="flex items-center justify-center h-full text-primary-foreground text-sm">Invalid video URL</div>
             )}
           </div>
-          {category && (
-            <Link to={`/category/${category.slug}`} className="text-xs uppercase tracking-wider text-accent font-medium">{category.name}</Link>
+          {course && (
+            <Link to={`/courses/${course.id}`} className="text-xs uppercase tracking-wider text-accent font-medium">{course.title}</Link>
           )}
           <h1 className="mt-2 text-2xl md:text-3xl font-bold">{video.title}</h1>
           {video.description && <p className="mt-4 text-muted-foreground whitespace-pre-line">{video.description}</p>}
@@ -72,9 +72,9 @@ export default function VideoDetail() {
                 <h3 className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-accent transition-colors">
                   {v.title}
                 </h3>
-                {v.category_id && (categories.find((c) => c.id === v.category_id) || null) && (
+                {v.course_id && (courses.find((c) => c.id === v.course_id) || null) && (
                   <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {(categories.find((c) => c.id === v.category_id) || null)?.name}
+                    {(courses.find((c) => c.id === v.course_id) || null)?.title}
                   </div>
                 )}
               </div>

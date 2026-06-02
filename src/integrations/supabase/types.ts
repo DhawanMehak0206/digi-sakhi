@@ -79,6 +79,48 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          video_id: string
+        }
+        Insert: {
+          author_name: string
+          body: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          video_id: string
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -100,9 +142,68 @@ export type Database = {
         }
         Relationships: []
       }
+      user_quiz_progress: {
+        Row: {
+          id: string
+          passed_at: string
+          quiz_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          passed_at?: string
+          quiz_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          passed_at?: string
+          quiz_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quiz_progress_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_video_progress: {
+        Row: {
+          completed_at: string
+          id: string
+          video_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          video_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          video_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_video_progress_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
           category_id: string | null
+          course_id: string | null
           created_at: string
           description: string | null
           featured: boolean
@@ -116,6 +217,7 @@ export type Database = {
         }
         Insert: {
           category_id?: string | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           featured?: boolean
@@ -129,6 +231,7 @@ export type Database = {
         }
         Update: {
           category_id?: string | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           featured?: boolean
@@ -146,6 +249,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
           {

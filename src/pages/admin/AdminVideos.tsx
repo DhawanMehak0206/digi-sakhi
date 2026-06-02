@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Pencil, X } from "lucide-react";
 import { getYouTubeThumb } from "@/lib/content";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCategories, useQuizzes, useVideos } from "@/hooks/useSupabaseData";
+import { useCourses, useQuizzes, useVideos } from "@/hooks/useSupabaseData";
 import { deleteVideo, upsertVideo } from "@/lib/supabaseApi";
 import ConfirmDialog from "@/components/site/ConfirmDialog";
 
@@ -16,6 +16,7 @@ type VideoShape = {
   thumbnail: string | null;
   description: string | null;
   category_id: string | null;
+  course_id: string | null;
   tags: string[];
   quiz_id: string | null;
   featured: boolean;
@@ -24,20 +25,23 @@ type VideoShape = {
 
 const empty: VideoShape = {
   title: "", youtube_url: "", thumbnail: "", description: "",
-  category_id: null, tags: [], quiz_id: null, featured: false, trending: false,
+  category_id: null, course_id: null, tags: [], quiz_id: null, featured: false, trending: false,
 };
 
 export default function AdminVideos() {
   const qc = useQueryClient();
   const { data: videosData = [] } = useVideos();
-  const { data: categories = [] } = useCategories();
+  const { data: courses = [] } = useCourses();
   const { data: quizzes = [] } = useQuizzes();
   const [editing, setEditing] = useState<VideoShape | null>(null);
   const [tagsInput, setTagsInput] = useState("");
   const [delId, setDelId] = useState<string | null>(null);
 
   const openNew = () => { setEditing({ ...empty }); setTagsInput(""); };
-  const openEdit = (v: any) => { setEditing(v); setTagsInput((v.tags || []).join(", ")); };
+  const openEdit = (v: any) => {
+    setEditing({ ...v, course_id: v.course_id || null });
+    setTagsInput((v.tags || []).join(", "));
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (payload: VideoShape) => {
@@ -48,6 +52,7 @@ export default function AdminVideos() {
         thumbnail: rest.thumbnail || null,
         description: rest.description || null,
         tags: rest.tags || [],
+        category_id: null,
       } as any);
     },
     onSuccess: async () => {
@@ -90,6 +95,11 @@ export default function AdminVideos() {
             <div className="flex-1 min-w-0">
               <div className="font-semibold truncate">{v.title}</div>
               <div className="text-xs text-muted-foreground truncate">{v.youtube_url}</div>
+              {v.course_id && (
+                <div className="text-xs text-muted-foreground truncate mt-1">
+                  Course: {courses.find((c) => c.id === v.course_id)?.title || "Unknown"}
+                </div>
+              )}
               <div className="mt-1 flex flex-wrap gap-1 text-xs">
                 {v.featured && <span className="bg-accent-soft text-accent px-2 py-0.5">Featured</span>}
                 {v.trending && <span className="bg-accent-soft text-accent px-2 py-0.5">Trending</span>}
@@ -125,10 +135,10 @@ export default function AdminVideos() {
               )}
               <Field label="Description"><textarea rows={4} value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className={inp + " h-auto py-2"} /></Field>
               <Field label="Tags (comma separated)"><input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className={inp} placeholder="ai, beginners, prompting" /></Field>
-              <Field label="Category">
-                <select value={editing.category_id || ""} onChange={(e) => setEditing({ ...editing, category_id: e.target.value || null })} className={inp}>
+              <Field label="Course">
+                <select value={editing.course_id || ""} onChange={(e) => setEditing({ ...editing, course_id: e.target.value || null })} className={inp}>
                   <option value="">— None —</option>
-                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </Field>
               <Field label="Quiz (optional)">

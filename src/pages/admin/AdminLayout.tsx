@@ -2,18 +2,30 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, Video, FileText, GraduationCap, ArrowLeft, ListChecks } from "lucide-react";
-import { adminAuth, useAdminAuth } from "@/hooks/useAdminAuth";
 import ConfirmDialog from "@/components/site/ConfirmDialog";
 import ThemeToggle from "@/components/site/ThemeToggle";
 import Logo from "@/components/site/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function AdminLayout() {
-  const authed = useAdminAuth();
+  const { session, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [confirmOut, setConfirmOut] = useState(false);
 
-  useEffect(() => { if (!authed) navigate("/admin/auth", { replace: true }); }, [authed, navigate]);
-  if (!authed) return null;
+  useEffect(() => {
+    if (loading) return;
+    if (!session) {
+      navigate("/auth", { replace: true, state: { from: "/admin", mode: "signin" } });
+      return;
+    }
+    if (!isAdmin) {
+      navigate("/", { replace: true });
+    }
+  }, [isAdmin, loading, navigate, session]);
+
+  if (loading || !session || !isAdmin) return null;
 
   const items = [
     { to: "/admin", label: "Videos", icon: Video, end: true },
@@ -83,7 +95,15 @@ export default function AdminLayout() {
         description="You'll need to sign in again to manage content."
         confirmLabel="Sign out"
         destructive
-        onConfirm={() => adminAuth.logout()}
+        onConfirm={async () => {
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            toast.error(error.message || "Sign out failed");
+            return;
+          }
+          toast.success("Signed out");
+          navigate("/", { replace: true });
+        }}
       />
     </div>
   );

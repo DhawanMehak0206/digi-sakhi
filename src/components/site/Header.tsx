@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -17,10 +20,21 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { session, isAdmin, loading } = useAuth();
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error(error.message || "Sign out failed");
+      return;
+    }
+    toast.success("Signed out");
+    navigate("/", { replace: true });
   };
 
   return (
@@ -57,9 +71,21 @@ export default function Header() {
 
         <div className="hidden md:flex items-center gap-2">
           <ThemeToggle />
-          <Link to="/admin">
-            <Button variant="outline" size="sm" className="rounded-none">Admin</Button>
+          <Link to={session ? "/account" : "/auth"}>
+            <Button variant="outline" size="sm" className="rounded-none">
+              {session ? "My Progress" : "Sign in / Sign up"}
+            </Button>
           </Link>
+          {!loading && isAdmin && (
+            <Link to="/admin">
+              <Button variant="outline" size="sm" className="rounded-none">Admin</Button>
+            </Link>
+          )}
+          {session && (
+            <Button variant="outline" size="sm" className="rounded-none" onClick={signOut}>
+              Sign out
+            </Button>
+          )}
         </div>
 
         <div className="md:hidden ml-auto flex items-center gap-2">
@@ -95,9 +121,29 @@ export default function Header() {
                 className="w-full h-10 pl-9 pr-3 text-sm bg-secondary border border-border rounded-none"
               />
             </form>
-            <Link to="/admin" onClick={() => setOpen(false)} className="mt-2">
-              <Button variant="outline" size="sm" className="w-full rounded-none">Admin</Button>
+            <Link to={session ? "/account" : "/auth"} onClick={() => setOpen(false)} className="mt-2">
+              <Button variant="outline" size="sm" className="w-full rounded-none">
+                {session ? "My Progress" : "Sign in / Sign up"}
+              </Button>
             </Link>
+            {!loading && isAdmin && (
+              <Link to="/admin" onClick={() => setOpen(false)} className="mt-2">
+                <Button variant="outline" size="sm" className="w-full rounded-none">Admin</Button>
+              </Link>
+            )}
+            {session && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full rounded-none mt-2"
+                onClick={() => {
+                  setOpen(false);
+                  void signOut();
+                }}
+              >
+                Sign out
+              </Button>
+            )}
           </div>
         </div>
       )}

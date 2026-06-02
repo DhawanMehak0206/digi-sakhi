@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { getYouTubeThumb } from "@/lib/content";
 import { PlayCircle } from "lucide-react";
-import { useCategories } from "@/hooks/useSupabaseData";
+import { useCourses } from "@/hooks/useSupabaseData";
 
 export interface VideoCardData {
   id: string;
@@ -10,12 +10,13 @@ export interface VideoCardData {
   youtube_url: string;
   thumbnail?: string | null;
   category_id?: string | null;
+  course_id?: string | null;
   tags?: string[];
 }
 
 export function VideoCard({ v }: { v: VideoCardData }) {
-  const { data: categories = [] } = useCategories();
-  const category = categories.find((c) => c.id === v.category_id) || null;
+  const { data: courses = [] } = useCourses();
+  const course = courses.find((c) => c.id === v.course_id) || null;
   return (
     <Link to={`/videos/${v.id}`} className="group block bg-card border border-border card-hover">
       <div className="relative aspect-video overflow-hidden bg-secondary">
@@ -28,9 +29,9 @@ export function VideoCard({ v }: { v: VideoCardData }) {
         <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/30 transition-colors flex items-center justify-center">
           <PlayCircle className="h-14 w-14 text-white opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
         </div>
-        {category && (
+        {course && (
           <span className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-xs font-medium px-2 py-1">
-            {category.name}
+            {course.title}
           </span>
         )}
       </div>

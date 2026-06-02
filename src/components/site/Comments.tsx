@@ -1,81 +1,96 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { createComment, listComments, type CommentRow } from "@/lib/supabaseApi";
 import { MessageCircle, Reply, User } from "lucide-react";
 
-interface Comment {
-  id: string;
-  author: string;
-  text: string;
-  createdAt: string;
-  replies: Comment[];
-}
+type CommentNode = CommentRow & { replies: CommentNode[] };
 
-const seed = (videoId: string): Comment[] => [
-  {
-    id: "c1", author: "Aanya", text: "Loved this — the explainer at 2:30 finally made it click for me!",
-    createdAt: new Date(Date.now() - 36e5 * 4).toISOString(),
-    replies: [
-      {
-        id: "c1r1", author: "Hertech", text: "So glad it helped, Aanya! 💜",
-        createdAt: new Date(Date.now() - 36e5 * 3).toISOString(), replies: [],
-      },
-    ],
-  },
-  {
-    id: "c2", author: "Priya", text: "Could you do a follow-up on prompt patterns next?",
-    createdAt: new Date(Date.now() - 36e5 * 12).toISOString(), replies: [],
-  },
-];
-
-const uid = () => Math.random().toString(36).slice(2, 9);
 const timeAgo = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 };
 
+function buildTree(rows: CommentRow[]): CommentNode[] {
+  const nodes = new Map<string, CommentNode>();
+  const roots: CommentNode[] = [];
+
+  rows.forEach((row) => nodes.set(row.id, { ...row, replies: [] }));
+
+  rows.forEach((row) => {
+    const node = nodes.get(row.id);
+    if (!node) return;
+    if (row.parent_id) {
+      const parent = nodes.get(row.parent_id);
+      if (parent) {
+        parent.replies.push(node);
+        return;
+      }
+    }
+    roots.push(node);
+  });
+
+  return roots;
+}
+
 export default function Comments({ videoId }: { videoId: string }) {
-  const [comments, setComments] = useState<Comment[]>(() => seed(videoId));
+  const qc = useQueryClient();
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["comments", videoId],
+    queryFn: () => listComments(videoId),
+    enabled: !!videoId,
+  });
+
+  const comments = useMemo(() => buildTree(rows), [rows]);
+
   const [name, setName] = useState("");
   const [text, setText] = useState("");
 
-  const addReplyAt = (list: Comment[], parentId: string, reply: Comment): Comment[] =>
-    list.map((c) =>
-      c.id === parentId
-        ? { ...c, replies: [...c.replies, reply] }
-        : { ...c, replies: addReplyAt(c.replies, parentId, reply) }
-    );
+  const mutation = useMutation({
+    mutationFn: async (payload: { parent_id: string | null; author_name: string; body: string }) =>
+      createComment({
+        video_id: videoId,
+        parent_id: payload.parent_id,
+        author_name: payload.author_name,
+        body: payload.body,
+      }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["comments", videoId] });
+    },
+  });
 
-  const submit = (e: React.FormEvent) => {
+  const submitRoot = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim()) return;
-    const c: Comment = {
-      id: uid(), author: name.trim() || "Guest", text: text.trim(),
-      createdAt: new Date().toISOString(), replies: [],
-    };
-    setComments([c, ...comments]);
+    const body = text.trim();
+    if (!body) return;
+    mutation.mutate({
+      parent_id: null,
+      author_name: name.trim() || "Guest",
+      body,
+    });
     setText("");
+    setName("");
   };
 
-  const reply = (parentId: string, author: string, message: string) => {
-    const r: Comment = {
-      id: uid(), author: author || "Guest", text: message,
-      createdAt: new Date().toISOString(), replies: [],
-    };
-    setComments(addReplyAt(comments, parentId, r));
+  const submitReply = (parentId: string, authorName: string, body: string) => {
+    mutation.mutate({
+      parent_id: parentId,
+      author_name: authorName.trim() || "Guest",
+      body: body.trim(),
+    });
   };
 
-  const total = (() => {
-    let n = 0;
-    const walk = (l: Comment[]) => l.forEach((c) => { n++; walk(c.replies); });
-    walk(comments);
-    return n;
-  })();
+  const total = useMemo(() => {
+    const walk = (nodes: CommentNode[]): number =>
+      nodes.reduce((count, node) => count + 1 + walk(node.replies), 0);
+    return walk(comments);
+  }, [comments]);
 
   return (
     <section className="mt-10 pt-8 border-t border-border">
@@ -83,37 +98,54 @@ export default function Comments({ videoId }: { videoId: string }) {
         <MessageCircle className="h-5 w-5" /> {total} Comments
       </h2>
 
-      <form onSubmit={submit} className="bg-card border border-border p-4 mb-8">
+      <form onSubmit={submitRoot} className="bg-card border border-border p-4 mb-8">
         <div className="grid sm:grid-cols-[1fr_2fr] gap-3">
           <input
-            value={name} onChange={(e) => setName(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
             className="h-10 px-3 bg-background border border-border rounded-none text-sm focus:outline-none focus:border-accent"
           />
           <textarea
-            value={text} onChange={(e) => setText(e.target.value)}
-            placeholder="Add a comment…" rows={2}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Add a comment…"
+            rows={2}
             className="px-3 py-2 bg-background border border-border rounded-none text-sm focus:outline-none focus:border-accent"
           />
         </div>
         <div className="mt-3 flex justify-end">
-          <Button type="submit" className="rounded-none bg-accent hover:bg-accent/90">Post comment</Button>
+          <Button type="submit" className="rounded-none bg-accent hover:bg-accent/90" disabled={mutation.isPending || !text.trim()}>
+            Post comment
+          </Button>
         </div>
       </form>
 
-      <div className="space-y-6">
-        {comments.map((c) => (
-          <CommentItem key={c.id} c={c} onReply={reply} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="text-sm text-muted-foreground">Loading comments…</div>
+      ) : (
+        <div className="space-y-6">
+          {comments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Be the first to comment.</p>
+          ) : (
+            comments.map((comment) => (
+              <CommentItem key={comment.id} c={comment} onReply={submitReply} />
+            ))
+          )}
+        </div>
+      )}
     </section>
   );
 }
 
 function CommentItem({
-  c, onReply, depth = 0,
+  c,
+  onReply,
+  depth = 0,
 }: {
-  c: Comment; onReply: (parentId: string, author: string, message: string) => void; depth?: number;
+  c: CommentNode;
+  onReply: (parentId: string, authorName: string, body: string) => void;
+  depth?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -121,9 +153,12 @@ function CommentItem({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim()) return;
-    onReply(c.id, name, text.trim());
-    setText(""); setName(""); setOpen(false);
+    const body = text.trim();
+    if (!body) return;
+    onReply(c.id, name, body);
+    setText("");
+    setName("");
+    setOpen(false);
   };
 
   return (
@@ -134,10 +169,10 @@ function CommentItem({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="font-semibold text-sm">{c.author}</span>
-            <span className="text-xs text-muted-foreground">{timeAgo(c.createdAt)}</span>
+            <span className="font-semibold text-sm">{c.author_name}</span>
+            <span className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</span>
           </div>
-          <p className="mt-1 text-sm text-foreground/90 whitespace-pre-line">{c.text}</p>
+          <p className="mt-1 text-sm text-foreground/90 whitespace-pre-line">{c.body}</p>
           <button
             onClick={() => setOpen(!open)}
             className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent"
@@ -148,26 +183,33 @@ function CommentItem({
           {open && (
             <form onSubmit={submit} className="mt-3 bg-secondary/50 border border-border p-3 space-y-2">
               <input
-                value={name} onChange={(e) => setName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 className="w-full h-9 px-3 bg-background border border-border rounded-none text-sm focus:outline-none focus:border-accent"
               />
               <textarea
-                value={text} onChange={(e) => setText(e.target.value)}
-                placeholder={`Reply to ${c.author}…`} rows={2}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={`Reply to ${c.author_name}…`}
+                rows={2}
                 className="w-full px-3 py-2 bg-background border border-border rounded-none text-sm focus:outline-none focus:border-accent"
               />
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" size="sm" className="rounded-none" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button type="submit" size="sm" className="rounded-none bg-accent hover:bg-accent/90">Reply</Button>
+                <Button type="button" variant="outline" size="sm" className="rounded-none" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" className="rounded-none bg-accent hover:bg-accent/90">
+                  Reply
+                </Button>
               </div>
             </form>
           )}
 
           {c.replies.length > 0 && (
             <div className="mt-4 space-y-4">
-              {c.replies.map((r) => (
-                <CommentItem key={r.id} c={r} onReply={onReply} depth={depth + 1} />
+              {c.replies.map((reply) => (
+                <CommentItem key={reply.id} c={reply} onReply={onReply} depth={depth + 1} />
               ))}
             </div>
           )}
