@@ -9,11 +9,12 @@ import {
 } from "@/lib/supabaseApi";
 import { emptyLearningProgress, type LearningProgress } from "@/lib/learningProgress";
 
-const guestKey = "hertech_guest_progress";
+const guestKey = "digisakhi_guest_progress";
+const legacyGuestKey = "hertech_guest_progress";
 
 function loadGuestProgress(): LearningProgress {
   try {
-    const raw = localStorage.getItem(guestKey);
+    const raw = localStorage.getItem(guestKey) || localStorage.getItem(legacyGuestKey);
     if (!raw) return emptyLearningProgress();
     const parsed = JSON.parse(raw);
     return {
@@ -27,6 +28,7 @@ function loadGuestProgress(): LearningProgress {
 
 function saveGuestProgress(progress: LearningProgress) {
   localStorage.setItem(guestKey, JSON.stringify(progress));
+  localStorage.removeItem(legacyGuestKey);
 }
 
 function mergeUnique(values: string[], next: string) {

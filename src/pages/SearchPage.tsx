@@ -11,7 +11,7 @@ export default function SearchPage() {
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
 
-  useEffect(() => { document.title = "Search — Hertech"; }, []);
+  useEffect(() => { document.title = "Search — Digi Sakhi"; }, []);
 
   const term = (params.get("q") || "").trim().toLowerCase();
   const vResults = useMemo(() => !term ? [] : videos.filter((v) =>

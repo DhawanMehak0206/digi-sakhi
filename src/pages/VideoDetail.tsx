@@ -16,7 +16,7 @@ export default function VideoDetail() {
   );
 
   useEffect(() => {
-    if (video) document.title = `${video.title} — Hertech`;
+    if (video) document.title = `${video.title} — Digi Sakhi`;
     window.scrollTo(0, 0);
   }, [video]);
 

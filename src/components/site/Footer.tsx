@@ -58,7 +58,7 @@ export default function Footer() {
 
       <div className="border-t border-border">
         <div className="container-page py-5 flex flex-col sm:flex-row justify-between gap-2 text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} Hertech. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Digi Sakhi. All rights reserved.</span>
           <div className="flex gap-4">
             <a href="#" className="hover:text-accent">Privacy</a>
             <a href="#" className="hover:text-accent">Terms</a>

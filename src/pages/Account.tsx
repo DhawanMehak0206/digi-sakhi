@@ -17,7 +17,7 @@ export default function AccountPage() {
   const { progress, isLoading } = useLearningProgress();
 
   useEffect(() => {
-    document.title = "My Account — Hertech";
+    document.title = "My Account — Digi Sakhi";
   }, []);
 
   const courseSummaries = useMemo(

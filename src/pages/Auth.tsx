@@ -22,7 +22,7 @@ export default function AuthPage() {
   const from = useMemo(() => (location.state as any)?.from || "/account", [location.state]);
 
   useEffect(() => {
-    document.title = "Sign in — Hertech";
+    document.title = "Sign in — Digi Sakhi";
   }, []);
 
   useEffect(() => {

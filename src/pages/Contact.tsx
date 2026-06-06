@@ -11,7 +11,7 @@ const schema = z.object({
 });
 
 export default function Contact() {
-  useEffect(() => { document.title = "Contact — Hertech"; }, []);
+  useEffect(() => { document.title = "Contact — Digi Sakhi"; }, []);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
 
   const submit = (e: React.FormEvent) => {

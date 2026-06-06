@@ -103,7 +103,7 @@ export default function CoursePlayer() {
   }, [current, currentCompleted, currentQuizId, currentUnlocked, markVideoCompleted]);
 
   useEffect(() => {
-    if (course) document.title = `${course.title} — Hertech`;
+    if (course) document.title = `${course.title} — Digi Sakhi`;
     window.scrollTo(0, 0);
   }, [course]);
 

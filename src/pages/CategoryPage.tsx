@@ -14,7 +14,7 @@ export default function CategoryPage() {
   const cBlogs = useMemo(() => (cat ? blogs.filter((b) => b.category_id === cat.id) : []), [cat, blogs]);
 
   useEffect(() => {
-    if (cat) document.title = `${cat.name} — Hertech`;
+    if (cat) document.title = `${cat.name} — Digi Sakhi`;
   }, [cat]);
 
   if (categoriesLoading || videosLoading || blogsLoading) {

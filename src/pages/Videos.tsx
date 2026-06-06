@@ -7,7 +7,7 @@ export default function Videos() {
   const { data: videos = [], isLoading: videosLoading } = useVideos();
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
 
-  useEffect(() => { document.title = "Videos — Hertech"; }, []);
+  useEffect(() => { document.title = "Videos — Digi Sakhi"; }, []);
 
   const list = useMemo(
     () => active ? videos.filter((v) => v.course_id === active) : videos,

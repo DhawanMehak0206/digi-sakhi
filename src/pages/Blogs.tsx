@@ -6,7 +6,7 @@ export default function Blogs() {
   const [active, setActive] = useState<string>("all");
   const { data: blogs = [], isLoading } = useBlogs();
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-  useEffect(() => { document.title = "Blogs — Hertech"; }, []);
+  useEffect(() => { document.title = "Blogs — Digi Sakhi"; }, []);
 
   const filtered = useMemo(() => {
     if (active === "all") return blogs;

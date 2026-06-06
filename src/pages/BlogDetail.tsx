@@ -16,7 +16,7 @@ export default function BlogDetail() {
   );
 
   useEffect(() => {
-    if (blog) document.title = `${blog.title} — Hertech`;
+    if (blog) document.title = `${blog.title} — Digi Sakhi`;
   }, [blog]);
 
   if (isLoading) return <div className="container-page py-20 text-center text-muted-foreground">Loading…</div>;

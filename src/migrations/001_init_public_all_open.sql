@@ -1,4 +1,4 @@
--- Tech Bloom / Hertech: permissive public schema
+-- Tech Bloom / Digi Sakhi: permissive public schema
 -- WARNING: This migration enables FULL public read/write (anon) access.
 -- Apply in Supabase SQL editor or via CLI.
 

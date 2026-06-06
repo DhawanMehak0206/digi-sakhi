@@ -6,7 +6,7 @@ import { useCourses } from "@/hooks/useSupabaseData";
 export default function Courses() {
   const { data: courses = [], isLoading } = useCourses();
   useEffect(() => {
-    document.title = "Courses — Hertech";
+    document.title = "Courses — Digi Sakhi";
     window.scrollTo(0, 0);
   }, []);
 

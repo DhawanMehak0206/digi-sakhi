@@ -10,7 +10,7 @@ export default function Home() {
   const { data: videos = [] } = useVideos();
   const { data: blogs = [] } = useBlogs();
   const { data: categories = [] } = useCategories();
-  useEffect(() => { document.title = "Hertech — AI & Tech Content for Women"; }, []);
+  useEffect(() => { document.title = "Digi Sakhi — AI & Tech Content for Women"; }, []);
 
   const trending = useMemo(() => videos.filter((v) => v.trending).slice(0, 8), [videos]);
   const featured = useMemo(() => videos.filter((v) => v.featured).slice(0, 6), [videos]);
