@@ -8,12 +8,38 @@ export default function Blogs() {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   useEffect(() => { document.title = "Blogs — Digi Sakhi"; }, []);
 
+  // Avoid duplicate "Other" when a category with that name/slug already exists in the DB.
+  const categoryTabs = useMemo(
+    () => categories.filter((category) => {
+      const slug = category.slug.toLowerCase();
+      const name = category.name.toLowerCase();
+      return slug !== "other" && name !== "other";
+    }),
+    [categories],
+  );
+
+  const otherCategoryIds = useMemo(
+    () =>
+      categories
+        .filter((category) => {
+          const slug = category.slug.toLowerCase();
+          const name = category.name.toLowerCase();
+          return slug === "other" || name === "other";
+        })
+        .map((category) => category.id),
+    [categories],
+  );
+
   const filtered = useMemo(() => {
     if (active === "all") return blogs;
-    if (active === "other") return blogs.filter((blog) => !blog.category_id);
-    const category = categories.find((entry) => entry.slug === active);
+    if (active === "other") {
+      return blogs.filter(
+        (blog) => !blog.category_id || otherCategoryIds.includes(blog.category_id),
+      );
+    }
+    const category = categoryTabs.find((entry) => entry.slug === active);
     return category ? blogs.filter((blog) => blog.category_id === category.id) : blogs;
-  }, [active, blogs, categories]);
+  }, [active, blogs, categoryTabs, otherCategoryIds]);
 
   return (
     <div className="container-page py-10">
@@ -28,7 +54,7 @@ export default function Blogs() {
         >
           All
         </button>
-        {categories.map((category) => (
+        {categoryTabs.map((category) => (
           <button
             key={category.id}
             onClick={() => setActive(category.slug)}

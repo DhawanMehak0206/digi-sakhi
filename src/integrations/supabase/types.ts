@@ -417,6 +417,48 @@ export type Database = {
           },
         ]
       }
+      site_stats: {
+        Row: {
+          key: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          created_at: string
+          id: string
+          path: string
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          path: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          path?: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -430,6 +472,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_visitor_count: { Args: never; Returns: number }
       is_current_user_admin: { Args: never; Returns: boolean }
     }
     Enums: {

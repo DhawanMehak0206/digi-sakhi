@@ -113,7 +113,7 @@ export default function CoursePlayer() {
   if (!course) {
     return (
       <div className="container-page py-20 text-center text-muted-foreground">
-        Course not found. <Link to="/courses" className="text-accent">Back to courses</Link>
+        Course not found. <Link to="/videos" className="text-accent">Back to videos</Link>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function CoursePlayer() {
   if (!current) {
     return (
       <div className="container-page py-20 text-center text-muted-foreground">
-        Course has no valid videos yet. <Link to="/courses" className="text-accent">Back to courses</Link>
+        Course has no valid videos yet. <Link to="/videos" className="text-accent">Back to videos</Link>
       </div>
     );
   }
@@ -170,7 +170,7 @@ export default function CoursePlayer() {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/courses" className="text-sm text-accent hover:underline">← Back to courses</Link>
+            <Link to="/videos" className="text-sm text-accent hover:underline">← Back to videos</Link>
           </div>
         </aside>
 

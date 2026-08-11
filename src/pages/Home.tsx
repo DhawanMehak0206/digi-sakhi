@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { VideoCard } from "@/components/site/VideoCard";
 import { BlogCard } from "@/components/site/BlogCard";
+import HeroCarousel from "@/components/site/HeroCarousel";
+import ImpactTeaser from "@/components/site/ImpactTeaser";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Cpu } from "lucide-react";
 import { useBlogs, useCategories, useVideos } from "@/hooks/useSupabaseData";
@@ -19,24 +21,40 @@ export default function Home() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-border" style={{ background: "var(--gradient-hero)" }}>
-        <div className="container-page py-20 md:py-28 hero-on-dark">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/20 border border-accent/40 text-sm mb-6">
-              <Cpu className="h-3.5 w-3.5" /> AI &amp; Tech, for women
+        <div className="container-page py-14 md:py-20 hero-on-dark">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/20 border border-accent/40 text-sm mb-6">
+                <Cpu className="h-3.5 w-3.5" /> AI &amp; Tech, for women
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
+                Learn AI. Build the future. <span className="text-accent">On your terms.</span>
+              </h1>
+              <p className="mt-6 text-lg hero-muted max-w-xl">
+                Bite-sized video lessons, workshops, and blogs on digital literacy — built for women
+                shaping their future with technology.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to="/videos">
+                  <Button size="lg" className="rounded-none bg-accent hover:bg-accent/90 text-white">
+                    Watch videos <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/impact">
+                  <Button size="lg" variant="outline" className="rounded-none border-white/30 bg-transparent text-white hover:bg-white hover:text-primary">
+                    See our impact
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
-              Learn AI. Build the future. <span className="text-accent">On your terms.</span>
-            </h1>
-            <p className="mt-6 text-lg hero-muted max-w-2xl">
-              Short, sharp videos and editorial blogs on artificial intelligence, tools, and tech careers — built for women shaping the future.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/videos"><Button size="lg" className="rounded-none bg-accent hover:bg-accent/90 text-white">Watch videos <ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
-              <Link to="/blogs"><Button size="lg" variant="outline" className="rounded-none border-white/30 bg-transparent text-white hover:bg-white hover:text-primary">Read blogs</Button></Link>
+            <div className="relative">
+              <HeroCarousel />
             </div>
           </div>
         </div>
       </section>
+
+      <ImpactTeaser />
 
       {trending.length > 0 && (
         <section className="py-14">
