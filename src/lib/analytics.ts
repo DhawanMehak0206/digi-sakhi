@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "digisakhi_visit_counted";
 const FALLBACK_COUNT_KEY = "digisakhi_visitor_fallback";
-const INITIAL_COUNT = 5000;
+const INITIAL_COUNT = 15000;
 
 let bumpPromise: Promise<number> | null = null;
 
