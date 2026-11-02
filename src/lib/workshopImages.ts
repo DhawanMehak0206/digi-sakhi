@@ -24,7 +24,7 @@ export const workshopImages = [
 export const impactStats = [
   { value: "25+", label: "Women trained in the first AI & design bootcamp" },
   { value: "8", label: "Hands-on sessions in the inaugural program" },
-  { value: "5,000+", label: "Learners and visitors reached online" },
+  { value: "16,000+", label: "Learners and visitors reached online" },
   { value: "India-wide", label: "Workshops with schools & NGOs" },
 ] as const;
 
