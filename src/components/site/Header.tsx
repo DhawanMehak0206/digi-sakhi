@@ -10,9 +10,10 @@ import { toast } from "sonner";
 
 const nav = [
   { to: "/", label: "Home" },
-  { to: "/courses", label: "Courses" },
   { to: "/videos", label: "Videos" },
   { to: "/blogs", label: "Blogs" },
+  { to: "/impact", label: "Impact" },
+  { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
 ];
 
@@ -39,8 +40,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur">
-      <div className="container-page flex h-16 items-center gap-4">
-        <Link to="/"><Logo /></Link>
+      <div className="container-page flex h-24 md:h-28 items-center gap-4">
+        <Link to="/" aria-label="Digi Sakhi home" className="shrink-0 py-1">
+          <Logo size="nav" />
+        </Link>
 
         <nav className="hidden md:flex items-center gap-1 ml-6">
           {nav.map((n) => (

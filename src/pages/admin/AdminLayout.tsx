@@ -38,7 +38,7 @@ export default function AdminLayout() {
     <div className="min-h-screen flex flex-col md:flex-row">
       <aside className="md:w-60 md:min-h-screen md:flex md:flex-col border-b md:border-b-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
-          <Link to="/" className="text-sidebar-foreground hover:text-sidebar-primary"><Logo /></Link>
+          <Link to="/" className="text-sidebar-foreground hover:text-sidebar-primary"><Logo size="nav" /></Link>
         </div>
         <nav className="p-3 flex md:flex-col gap-1 overflow-x-auto md:flex-1">
           {items.map((it) => (
