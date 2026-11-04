@@ -33,7 +33,7 @@ grant select, insert, update, delete on public.site_stats to anon, authenticated
 grant select, insert, update, delete on public.page_views to anon, authenticated;
 
 insert into public.site_stats (key, value)
-values ('visitor_count', 15000)
+values ('visitor_count', 16000)
 on conflict (key) do nothing;
 
 create or replace function public.increment_visitor_count()
